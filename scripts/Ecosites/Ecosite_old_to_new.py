@@ -1,8 +1,11 @@
+version = 'a4'
 # This script alters the original data!
 # This script is designed for Romeo Malette inventory, so it works best on Romeo.
 # Romeo inventory has "Ecosite" field that carries values such as 'NE5m' or 'NE6c'.
 # This script converts those values into the new Ecosite values such as B098 and B040.
 # if there are multiple "Best Fit" ecosites - eg. 'NE5m' can be 'B098' or 'B114' - the script will just pick the first one.
+
+# possible improvements: we could populate sec_eco using good fit and poor fit values.
 
 import os, collections
 import arcpy
@@ -11,13 +14,14 @@ import Ecosite_crosswalk_dict as ecd
 
 def main(input_inventory,ecosite_fieldname,new_ecosite_fieldname):
 
+	arcpy.AddMessage("Ecosite_old_to_new v.%s"%version)
+
 	# create a new text attribute(field) = new_ecosite_fieldname
 	arcpy.AddMessage("\nCreating a new field: %s"%new_ecosite_fieldname)
-	try:
-		arcpy.management.AddField(input_inventory,new_ecosite_fieldname, "TEXT", field_length= 10)
-	except:
-		arcpy.AddWarning("\nFailed to create the new field. Check if '%s' field already exists!"%new_ecosite_fieldname)
-		raise
+	arcpy.management.AddField(input_inventory,new_ecosite_fieldname, "TEXT", field_length= 10)
+	# note that if the new field already exists, the script will simply ignore AddField method and continue on.
+
+
 
 	# we could use field calculator here, but I am gonna go with update cursor
 	arcpy.AddMessage("\nPopulating new ecosite values to the %s field..."%new_ecosite_fieldname)
@@ -45,13 +49,13 @@ def main(input_inventory,ecosite_fieldname,new_ecosite_fieldname):
 		error_summary = collections.Counter(errors) # eg. Counter({'NE99': 2, 'K13': 1}) - ones that didn't show up in the ecosite crosswalk dictionary
 		arcpy.AddMessage("\nCollections of errors (most common to least common):")
 		for e in error_summary.most_common(): # this sorts the counter by the occurence frequency
-			arcpy.AddMessage('\n%s'%e)
+			arcpy.AddMessage('\n%s\t%s'%(e[0],e[1]))
 
 	if len(success) > 0:
 		success_summary = collections.Counter(success)
 		arcpy.AddMessage("\nCollections of successful ecosite conversions (most common to least common):")
 		for suc in success_summary.most_common(): # this sorts the counter by the occurence frequency
-			arcpy.AddMessage('\n%s'%suc)
+			arcpy.AddMessage('\n%s\t%s'%(suc[0],suc[1]))
 
 
 
