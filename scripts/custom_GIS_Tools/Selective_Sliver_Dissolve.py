@@ -1,6 +1,5 @@
-# This is an incomplete tool!!
-version = '0.1.0'
-# The basis of this tool is Eliminate tool from ArcGIS Pro which requires Advanced license
+# slivers will be merged to neighboring polygon with similar attributes
+version = 0.1.0
 
 import arcpy
 from datetime import datetime
@@ -10,32 +9,27 @@ import os
 from messages import print_n_log
 
 
-def main(inputfc, outputfc, elim_by_border, first_elim_SQL, second_elim_SQL, third_elim_SQL, exclusion_SQL):
+def main(inputfc, outputWS, uniq_id_fname, sliver_SQL, fields_to_match):
 
 	starttime = datetime.now()
 
 	# start logging
 	p = print_n_log()
-	p.print2("Sequential Eliminate Tool v%s"%version)
+	p.print2("Selective Sliver Dissolve Tool v%s"%version)
 	p.print2('Start of process: %(start)s.' %{'start':starttime.strftime('%Y-%m-%d %H:%M:%S')})
 
-	# warning
-	p.print2("\nNOTE: This tool won't run if you don't have the ADVANCED license!\n", do_not_log = True)
-
-	# get path to the gdb or the feature dataset
-	fcpath = os.path.split(outputfc)[0] # should give full path but not including the fc name
-	arcpy.env.workspace = fcpath
+	arcpy.env.workspace = outputWS
 	outputfc_filename = os.path.split(outputfc)[1]
 
-	if fcpath.upper().endswith('.GDB'):
-		gdbpath = fcpath
+	if outputWS.upper().endswith('.GDB'):
+		gdbpath = outputWS
 	else:
-		gdbpath = os.path.split(fcpath)[0] # gdb path is used later to create log file on its parent folder
+		gdbpath = os.path.split(outputWS)[0] # gdb path is used later to create log file on its parent folder
 	p.print2("path to gdb: %s"%gdbpath)
 
 	# check if the input has mandatory fields
 	p.print2("Checking mandatory fields...")
-	mand_fields = ['SHAPE_AREA','AREA_OVER_LENG']
+	mand_fields = fields_to_match + ['SHAPE_AREA',uniq_id_fname] ################# fields_to_match must be a list of fieldnames.
 	existingFields = [str(f.name).upper() for f in arcpy.ListFields(inputfc)]
 	for mf in mand_fields:
 		if mf in existingFields:
@@ -73,13 +67,13 @@ def main(inputfc, outputfc, elim_by_border, first_elim_SQL, second_elim_SQL, thi
 if __name__ == '__main__':
 
 	inputfc = arcpy.GetParameterAsText(0)
-	outputfc = arcpy.GetParameterAsText(1)
-	elim_by_border = arcpy.GetParameterAsText(2)
-	first_elim_SQL = arcpy.GetParameterAsText(3)
-	second_elim_SQL = arcpy.GetParameterAsText(4)
-	third_elim_SQL = arcpy.GetParameterAsText(5)
-	exclusion_SQL = arcpy.GetParameterAsText(6)
+	outputWS = arcpy.GetParameterAsText(1) # should be the path to an existing gdb
+	uniq_id_fname = arcpy.GetParameterAsText(2) # text
+	sliver_SQL = arcpy.GetParameterAsText(3) # should be an SQL that you can run on the inputfc
+	fields_to_match = arcpy.GetParameterAsText(4) # list of fields in inputfc that needs to match with the sliver for the polygons to merge
 
-	elim_by_border = "LENGTH" if elim_by_border == 'true' else "AREA"
+	# checking the inputs - debug only
+	for i in [inputfc, outputWS, uniq_id_fname, sliver_SQL, fields_to_match]:
+		arcpy.AddMessage(i)
 
-	main(inputfc, outputfc, elim_by_border, first_elim_SQL, second_elim_SQL, third_elim_SQL, exclusion_SQL)
+	main(inputfc, outputWS, uniq_id_fname, sliver_SQL, fields_to_match)
