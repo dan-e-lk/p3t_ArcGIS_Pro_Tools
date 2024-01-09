@@ -103,7 +103,7 @@ def main(inputfc, outputWS, uniq_id_fname, sliver_SQL, fields_to_match):
 	p.print2("sliver and its neighbors:\n%s"%sliver_n_neighbors)
 	# delete the temporary PN tool output
 	p.print2("Deleting the temporary file...")
-	arcpy.management.Delete(pn_output)
+	arcpy.management.Delete(pn_output) # for ESRI, this is the most time consuming part of all...
 
 
 
@@ -121,7 +121,7 @@ def main(inputfc, outputWS, uniq_id_fname, sliver_SQL, fields_to_match):
 			f2m_str = '' # field to match string is a concatenation of all values in field_to_match fields into one string. eg. '154SB  90LA  10'
 			for fname in fields_to_match:
 				f2m_str += str(row[mand_fields.index(fname)]) #eg. 'SB  90LA  10' or '154' (whatever values the fields_to_match has)
-			inputfc_dict['f2m_str'] = f2m_str
+			row_dict['f2m_str'] = f2m_str
 			inputfc_dict[row[0]] = row_dict # row[0] is the unique_id value of that row.
 	
 	# loop through the unique ids of the slivers and decide to which neighboring polygon the sliver should merge
@@ -129,18 +129,21 @@ def main(inputfc, outputWS, uniq_id_fname, sliver_SQL, fields_to_match):
 	# if there are more than one candidate of absorbing neighbor, the bigger neighbor becomes the absorbing neighbor
 	# a sliver cannot be the absorbing neighbor of another sliver
 	# the_pair consists of the pair of sliver polygon and the absorbing neighbor polygon
+	p.print2("\nBuilding sliver to absorbing neighbor pairs...")
 	the_pair = {sliver_id:None for sliver_id in sliver_n_neighbors.keys()} # eg. {340:365, 344:None,...}
 	for sliv, neighb in sliver_n_neighbors.items():
 		target_f2m_str = inputfc_dict[sliv]['f2m_str'] #eg. '154SB  90LA  10'
 		candidate_neighbor_area = 0
 		for uid in neighb:
-			# if there is a match
-			if inputfc_dict[uid]['f2m_str'] == target_f2m_str:
+			# if there is a match and the match is not another sliver
+			if inputfc_dict[uid]['f2m_str'] == target_f2m_str and uid not in sliver_ids:
 				# and if this match is the biggest neighbor
 				if inputfc_dict[uid]['SHAPE_AREA'] > candidate_neighbor_area:
 					# we found it!
 					the_pair[sliv]=uid # eg. {340:365}
-	
+
+	p.print2("Done! First number is the id of the sliver and the second number is the id of the neighbor that the sliver will merge into:")
+	p.print2(str(the_pair))
 
 
 
