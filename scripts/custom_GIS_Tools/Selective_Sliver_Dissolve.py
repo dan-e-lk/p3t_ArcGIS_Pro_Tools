@@ -1,6 +1,11 @@
 # slivers will be merged to neighboring polygon with similar attributes
 # the tool doesn't alter the original input data
 # the tool won't work if the uniq_id_fname values are not unique!!!!!
+
+# To do for Daniel:
+# Script to add the final output to the current map on ArcGIS Pro
+# ArcGIS Tool - write help section
+
 version = '0.1.0'
 
 import arcpy
