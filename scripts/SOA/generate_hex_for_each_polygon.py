@@ -2,6 +2,8 @@
 # The output of this tool will always have MNR Lambert conformal conic projection
 # "Generate Tesselation" is the main geoprocessing tool used
 
+# FUTURE UPDATE: on the final product, rename FMU_CODE field to MUNO
+
 import arcpy, os
 
 def main(in_fc,name_field,out_gdb,h3_level):

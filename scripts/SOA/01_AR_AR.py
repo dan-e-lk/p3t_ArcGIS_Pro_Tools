@@ -24,7 +24,7 @@ class Ar_ar:
 		DS_name = "Harvest" # try to stick to the same DS name as the AR Master
 		template = 'Harvest/Harvest_CC17'
 		append_lst = [os.path.join(ar_master_path,DS_name,i) for i in ['Harvest_CC02','Harvest_SE02','Harvest_SE17','Harvest_SH02','Harvest_SH17']]
-		new_fc_name = 'HRV_All_02_n_up'
+		new_fc_name = 'HRV_All_02_n_up' # if you change this, it will mess up the next script
 
 		# create feature dataset
 		self.logger.print2("\n## Working on %s"%DS_name)
@@ -145,11 +145,9 @@ if __name__ == '__main__':
 
 	#### below: you can comment out the ones that you don't need to run
 	## Rolling up all fcs in the same category into a single fc.
-	# ar.harvest()
-	# ar.est()
+	ar.harvest()
+	ar.est()
 	ar.regen()
-
-
 
 	# writing the log file
 	logger.log_close()
