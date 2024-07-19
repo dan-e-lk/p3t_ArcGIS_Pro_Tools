@@ -14,6 +14,15 @@ This script will first turn all the HRV_All_02_n_up into hexagons (should we tre
 import arcpy
 import os, sys
 
+# importing libraries I made
+# importing arclog in the parent directory
+parent_d = os.path.split(os.path.split(__file__)[0])[0] # bring arclog.py from the parent directory
+sys.path.append(parent_d)
+from arclog import Print2 as p2
+# importing common_func from the parent directory
+import common_func as cf
+
+
 class Hexagonize:
 	def __init__(self, arar_gdb_path, hexagon_gdb, arhex_gdb_path, muno, projfile, logger):
 		self.logger = logger
@@ -23,7 +32,7 @@ class Hexagonize:
 		self.muno = muno
 		self.projfile = projfile
 		self.arhex_gdb_path = arhex_gdb_path
-		arcpy.env.workspace = ws = arhex_gdb_path
+		arcpy.env.workspace = self.ws = arhex_gdb_path
 
 		# muno selection sql
 		self.muno_sql = "MUNO = %s"%muno
@@ -35,14 +44,19 @@ class Hexagonize:
 		arcpy.CreateFeatureDataset_management(self.arhex_gdb_path, temp_ds, self.projfile)
 		self.temp_ds_path = os.path.join(arhex_gdb_path,temp_ds)
 
+		# real work begins here:
 		self.harvest() # this will be the base layer for everything so it must be run when this class initiates
 
 
 	def harvest(self):
+		"""This method generates both harvest hex and base hex.
+		base hex is basically harvest hex without any harvest fields.
+		If later I need to use all disturbances as base, I need to create a disturbance layer HRV+NatDist, then use (duplicate) this method as a template
+		"""
 		self.logger.print2("\n### Running method: harvest")
 		self.logger.print2("\tThis method generates base hexagon (based on harv) on which all other forestry events will be spatially joined")
 		# variables
-		DS_name = 'base'
+		DS_name = 'harvest'
 		hrv_fc_path = os.path.join(arar_gdb_path,'Harvest','HRV_All_02_n_up')
 		field_prefix = 'hrv'
 
@@ -66,7 +80,7 @@ class Hexagonize:
 		join_fc = sort_output
 		self.logger.print2("\tHexagonizing %s by spatial joining it with hex grid"%os.path.split(join_fc)[1])
 		output_fc_name = 'h_%s_%s'%(self.muno, field_prefix) #eg. h_889_hrv
-		output_fc_path = os.path.join(self.arhex_gdb_path,DS_name,output_fc_name) #eg. "...D\AR\AR_in_hex.gdb\base\h_889_hrv"
+		output_fc_path = os.path.join(self.arhex_gdb_path,DS_name,output_fc_name) #eg. "...D\AR\AR_in_hex.gdb\harvest\h_889_hrv"
 		arcpy.analysis.SpatialJoin(	target_features=target_fc,
 									join_features=join_fc,
 									out_feature_class=output_fc_path,
@@ -85,12 +99,30 @@ class Hexagonize:
 		hrv_fields = [] # this only applies to hrv - to be used next when creating base layer
 		for f in mf.hrv_keep:
 			new_fname = "%s_%s"%(field_prefix.upper(), f.upper()) # giving prefix to the fieldnames. eg. HRV_DSTBFU
-			arcpy.management.AlterField(output_fc_name, f, new_fname)
+			arcpy.management.AlterField(output_fc_name, f, new_fname, new_fname)
 			fields2keep[fields2keep.index(f)] = new_fname
 			hrv_fields.append(new_fname)
-		self.logger.print2("\tDone renaming fields. New fieldnames:\n\t%s"%fields2keep)
+		self.logger.print2("\tDone renaming fields. New fieldnames:\n\t%s\n"%fields2keep)
+		###### done with harvest layer ######
 
+
+		# generate base which is just the hexagon polygon without all the HRV fields.
+		self.logger.print2("Generating base layer")
+		DS_name = 'base'
+		self.logger.print2("\tGenerating dataset called '%s'."%DS_name)
+		arcpy.Delete_management(DS_name)
+		arcpy.CreateFeatureDataset_management(self.arhex_gdb_path, DS_name, self.projfile)
 		# generate the base by deleting HRV fields
+		basefc_path = os.path.join(self.ws, DS_name, 'h_%s_base'%self.muno) #eg. D:/base/h_421_base
+		hrvfc_path = output_fc_path
+
+		self.logger.print2("\tExporting the base and deleting HRV fields")
+		cf.quick_delete_field(inputfc=hrvfc_path, fields2delete_lst=hrv_fields, outputfc=basefc_path)
+
+		# self.logger.print2("\tExporting the base: %s"%basefc_path)
+		# arcpy.conversion.ExportFeatures(hrvfc_path, basefc_path)
+		# self.logger.print2("\tDeleting HRV~ fields")
+		# arcpy.management.DeleteField(basefc_path, hrv_fields)
 
 
 
@@ -125,11 +157,7 @@ if __name__ == '__main__':
 	# location of project file
 	projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj")
 	
-	# logfile stuff
-	# importing arclog in the parent directory
-	parent_d = os.path.split(os.path.split(__file__)[0])[0] # bring arclog.py from the parent directory
-	sys.path.append(parent_d)
-	from arclog import Print2 as p2
+	# start logfile
 	logger = p2(logfile_path)
 
 	# import mandatory field lists
@@ -140,10 +168,8 @@ if __name__ == '__main__':
 	# finally, running the main script
 	for muno in muno_list:
 		Hex = Hexagonize(arar_gdb_path, hexagon_gdb, arhex_gdb_path, muno, projfile, logger)
-		#### below: you can comment out the ones that you don't need to run
-		## turning stuff into hexagons now
 
-
+	logger.print2("Script complete!\nOutput gdb:\n%s"%arhex_gdb_path)
 
 	# writing the log file
 	logger.log_close()
