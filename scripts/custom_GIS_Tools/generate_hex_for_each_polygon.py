@@ -80,10 +80,10 @@ def main(in_fc,name_field,out_gdb,h3_level):
 
 if __name__ == '__main__':
 
-	in_fc = r'C:\Users\kimdan\Government of Ontario\GIS Data - GDDS\GDDS-Internal-MNRF.gdb\FOREST_MANAGEMENT_UNIT' # FMU layer
+	in_fc = r'T:\HexagonGrids\misc.gdb\FMU_Pineland_RedLake' # FMU layer
 	name_field = 'FMU_CODE' # A TEXT field from in_fc. the values of this field should be unique
-	out_gdb = r'T:\HexagonGrids\FMU_in_hex_L10.gdb' # this gdb must already exist
-	h3_level = 10 # at lvl 11, it takes 30mins per FMU to run this tool. # at lvl 10, takes about 5mins per FMU.
+	out_gdb = r'T:\HexagonGrids\FMU_in_hex_L12_RedLakePineland.gdb' # this gdb must already exist
+	h3_level = 12 # at lvl 11, it takes 30mins per FMU to run this tool. # at lvl 10, takes about 5mins per FMU.
 
 
 	main(in_fc,name_field,out_gdb,h3_level)
