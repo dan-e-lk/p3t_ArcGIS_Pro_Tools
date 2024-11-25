@@ -1,4 +1,7 @@
-# exports a feature class
+# exports a feature class to a table in SQLite3 database.
+# you can export it to an existing sqlite3 database OR create a new sqlite3 database.
+# if you are exporting it to an existing database, note that 
+# 	if the name of the new table you are about to create already exists, your new table will replace (delete) the existing table.
 
 import os, sqlite3
 import arcpy
@@ -17,7 +20,7 @@ fieldtype_map = {
 }
 
 
-def main(input_fc,output_sqlite_file,output_tablename):
+def fc_to_sqlite(input_fc,output_sqlite_file,output_tablename):
 
 	# grab all fieldnames and fieldtypes from the fc
 	fields = arcpy.ListFields(input_fc)
@@ -59,46 +62,45 @@ def main(input_fc,output_sqlite_file,output_tablename):
 	# save all data into memory and make a giant single SQL query
 	# INSERT INTO tablename (column1,column2 ,..)
 	# VALUES ( value1,	value2 ,...), ( value1,	value2 ,...)....;
-	arcpy.AddMessage("Generating INSERT Query...")
-	insert_sql = "INSERT INTO %s ("%output_tablename
+	# skip this if there are no records
+	rec_count = int(arcpy.management.GetCount(input_fc)[0])
+	arcpy.AddMessage("Record count: %s"%rec_count)
+	if rec_count > 0:
+		arcpy.AddMessage("Generating INSERT Query...")
+		insert_sql = "INSERT INTO %s ("%output_tablename
 
-	fname_list = list(f_name_n_type2.keys())
-	for fname in fname_list:
-		insert_sql += "%s,"%fname
-	insert_sql = insert_sql[:-1] # delete trailing comma
+		fname_list = list(f_name_n_type2.keys())
+		for fname in fname_list:
+			insert_sql += "%s,"%fname
+		insert_sql = insert_sql[:-1] # delete trailing comma
 
-	insert_sql += ") VALUES "
-	with arcpy.da.SearchCursor(input_fc, fname_list) as cursor:
-		for row in cursor:
-			row_values_sql = "("
-			for i, fname in enumerate(fname_list):
-				if row[i] == None:
-					row_values_sql += "null,"
-				elif f_name_n_type2[fname] == "TEXT": # if it's text, you gotta wrap it
-					row_values_sql += "'%s',"%row[i]
-				else:
-					row_values_sql += "%s,"%row[i]
-			row_values_sql = row_values_sql[:-1] # delete trailing comma
-			row_values_sql += ")," # eg. "(value1,value2,...),"
-			insert_sql += row_values_sql
+		insert_sql += ") VALUES "
+		with arcpy.da.SearchCursor(input_fc, fname_list) as cursor:
+			for row in cursor:
+				row_values_sql = "("
+				for i, fname in enumerate(fname_list):
+					if row[i] == None:
+						row_values_sql += "null,"
+					elif f_name_n_type2[fname] == "TEXT": # if it's text, you gotta wrap it
+						text_value = str(row[i]).replace("'","''") # replace apostrophe with double apostrophe for text handling
+						row_values_sql += "'%s',"%text_value
+					else:
+						row_values_sql += "%s,"%row[i]
+				row_values_sql = row_values_sql[:-1] # delete trailing comma
+				row_values_sql += ")," # eg. "(value1,value2,...),"
+				insert_sql += row_values_sql
 
-	insert_sql = insert_sql[:-1] # delete trailing comma
-	insert_sql += ";"
+		insert_sql = insert_sql[:-1] # delete trailing comma
+		insert_sql += ";"
 
-	arcpy.AddMessage("Executing INSERT Query...")
-	# arcpy.AddMessage(insert_sql)
-	cur.execute(insert_sql)
-	del insert_sql
+		arcpy.AddMessage("Executing INSERT Query...")
+		# arcpy.AddMessage(insert_sql)
+		cur.execute(insert_sql)
+		del insert_sql
 
 	con.commit()
 	con.close()
 
-	# a bonus - open folder containing the sqlite3 file
-	try:
-		import subprocess
-		subprocess.Popen(f'explorer /select,"{output_sqlite_file}"')
-	except:
-		pass
 
 
 
@@ -118,4 +120,13 @@ if __name__ == '__main__':
 	else:
 		output_sqlite_file = arcpy.GetParameterAsText(3)
 
-	main(input_fc,output_sqlite_file,output_tablename)
+	fc_to_sqlite(input_fc,output_sqlite_file,output_tablename)
+
+
+
+	# a bonus - open folder containing the sqlite3 file
+	try:
+		import subprocess
+		subprocess.Popen(f'explorer /select,"{output_sqlite_file}"')
+	except:
+		pass
