@@ -31,7 +31,7 @@ class Print2:
 
 
 # use case example: AR_AR.py
-# only works on arc for obvious reasons
+# only works on arc
 
 
 

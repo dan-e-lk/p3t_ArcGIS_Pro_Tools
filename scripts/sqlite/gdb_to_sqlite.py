@@ -57,7 +57,7 @@ def gdb_to_sqlite(input_gdb,output_sqlite_file,add_shapetype_suffix):
 		arcpy.AddMessage("\nExporting %s to %s (%s of %s)"%(input_fc,output_sqlite_file,progress,fc_count))
 		fc_to_sqlite(input_fc,output_sqlite_file,newname)
 
-
+	arcpy.AddMessage("\nAll Done!\n")
 
 
 
