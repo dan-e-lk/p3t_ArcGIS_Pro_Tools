@@ -16,6 +16,7 @@ class Print2:
 	def print2(self, msg, level = 'i'):
 		""" print, arcmap AddMessage and return string all in one!"""
 		# print(msg)
+		msg = str(msg)
 		if level == 'i':
 			arcpy.AddMessage(msg)
 			self.log.write('\n' + msg)
@@ -25,12 +26,12 @@ class Print2:
 
 	def log_close(self):
 		datetime_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-		self.log.write("Logging End Time: ")
+		self.log.write("\n\nLogging End Time: ")
 		self.log.write(str(datetime_now))
 		self.log.close()
 
 
-# use case example: AR_AR.py
+# use case example: AR_AR.py, Caribou_Habitat_Classification.py
 # only works on arc
 
 

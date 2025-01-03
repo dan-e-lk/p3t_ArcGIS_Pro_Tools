@@ -208,7 +208,7 @@ if __name__ == '__main__':
 
 
 	# running class Ar_ar
-	ar = Ar_ar(ar_master_path,arar_gdb_path,projfile, logger)
+	ar = Ar_ar(ar_master_path,arar_gdb_path,projfile, logger) # logger obj shouldn't have to be passed through (test this later)
 
 	#### below: you can comment out the ones that you don't need to run
 	## Rolling up all fcs in the same category into a single fc.
