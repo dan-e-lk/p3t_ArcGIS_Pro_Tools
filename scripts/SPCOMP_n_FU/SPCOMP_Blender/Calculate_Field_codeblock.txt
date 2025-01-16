@@ -1,0 +1,86 @@
+How to create the blended spcomp field:
+
+1. create a new field in your inventory (such as BLND_SPCOMP) with string (length 100).
+2. on your attribute table, right click the newly created field and choose Field Calculator.
+3. Click Python
+4. check the "Show Codeblock" box
+5. in the pre-logic script code, enter the following:
+
+##########################################################
+
+def main(ospcomp,uspcomp,occlo,ucclo):
+  try:
+    if ospcomp != None and uspcomp != None and occlo != None and ucclo != None:
+      if len(ospcomp)%6 == 0 and len(uspcomp)%6 == 0 and occlo + ucclo > 0:
+        n1 = len(ospcomp)/6
+        n2 = len(uspcomp)/6
+
+        spcList1 = [ospcomp[6*i:6*i+3].strip().upper() for i in range(n1)]
+        percentList1 = [int(ospcomp[6*i+3:6*i+6].strip()) for i in range(n1)]
+        spcPercentDict1 = dict(zip(spcList1,percentList1)) # this should look like {'AX':60,'CW':40}
+
+        spcList2 = [uspcomp[6*i:6*i+3].strip().upper() for i in range(n2)]
+        percentList2 = [int(uspcomp[6*i+3:6*i+6].strip()) for i in range(n2)]
+        spcPercentDict2 = dict(zip(spcList2,percentList2)) # this should look like {'AX':60,'CW':40}
+
+        blndPercentDict = {}
+        allspcList = list(set(spcList1)|set(spcList2))
+        for spc in allspcList:
+          try:
+            sp1 = spcPercentDict1[spc]
+          except:
+            sp1 = 0
+          try:
+            sp2 = spcPercentDict2[spc]
+          except:
+            sp2 = 0
+
+          calc = int(round( (sp1 * float(occlo)/(occlo+ucclo)) + (sp2 * float(ucclo)/(occlo+ucclo)) ))
+          if calc > 0:
+            blndPercentDict[spc] = calc 
+
+        print blndPercentDict # will look something like this: {'PR': 2, 'BF': 14, 'PW': 22, 'PT': 17, 'BW': 15, 'MR': 1, 'PJ': 7, 'SB': 22, 'PO': 1}
+
+
+        # check if they add up to 100.
+        blndPercentList = sorted(blndPercentDict.items(), key=lambda (k,v): (-v,k))
+        print blndPercentList # [('PW', 22), ('SB', 22), ('PT', 17), ('BW', 15), ('BF', 14), ('PJ', 7), ('PR', 2), ('MR', 1), ('PO', 1)]
+
+        sum_perc = 0
+        for perc in blndPercentDict.values():
+          sum_perc += perc
+        if sum_perc != 100:
+          if sum_perc in range(98,103): #[98, 99, 100, 101, 102]
+            change_needed = 100 - sum_perc
+            blndPercentList = sorted(blndPercentDict.items(), key=lambda (k,v): (-v,k))
+            print blndPercentList # [('PW', 22), ('SB', 22), ('PT', 17), ('BW', 15), ('BF', 14), ('PJ', 7), ('PR', 2), ('MR', 1), ('PO', 1)]
+            blndPercentDict[blndPercentList[0][0]] = blndPercentList[0][1] + change_needed
+        print blndPercentDict
+
+        # turning the result into the correct string format
+        blndPercentList = sorted(blndPercentDict.items(), key=lambda (k,v): (-v,k))
+        text = ''
+        for item in blndPercentList:
+          text += item[0].ljust(3)
+          text += str(item[1]).rjust(3)
+        print text
+        return text
+
+      else:
+        return 'Cannot be blended'
+    else:
+      return 'Cannot be blended'
+  except:
+    return 'Cannot be blended'
+
+##################################################
+
+
+
+
+6. in the box below, enter the following: (you may need to check the field names so they match the existing fields)
+
+
+
+main( !OSPCOMP!, !USPCOMP!, !OCCLO!, !UCCLO!)
+

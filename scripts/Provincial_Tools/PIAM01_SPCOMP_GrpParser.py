@@ -159,8 +159,29 @@ def main(inputfc,outputfc,spfield, spc_group_method):
 				row[f.index(spcgrp)] = val
 			cursor.updateRow(row)
 
-	## summarize and log
 
+	## summarize and log
+	logger.print2("\n\nSummarizing results...(tab delimited)")
+	# Species Group and individual species occurrence summary
+	SpcOccurDict = dict(sorted(SpcOccurDict.items(), key=lambda item: item[1], reverse=True)) # only works python 3+
+	logger.print2("\nSpc\tGrp\tOccurrence")
+	for spc, occ in SpcOccurDict.items():
+		spcgrp = spc_to_grp_map[spc]
+		logger.print2("%s\t%s\t%s"%(spc,spcgrp,occ))
+
+	# Species Group Occurrence
+	SpcGrp_OccurDict = dict(sorted(SpcGrp_OccurDict.items(), key=lambda item: item[1], reverse=True)) # only works python 3+
+	logger.print2("\nGrp\tOccurrence")
+	for spcgrp, occ in SpcGrp_OccurDict.items():
+		if occ>0:
+			logger.print2("%s\t%s"%(spcgrp,occ))
+
+	# Error report, if any
+	if sppErrorCount >0:
+		logger.print2("\n\n!!!! Error on %s records. %s value does not meet tech spec and the tool was not able to parse them out"%(sppErrorCount,spfield))
+		logger.print2("To find these errors use this query:\n%s LIKE 'Error%'")
+	else:
+		logger.print2("\nNo SPCOMP parsing error found! All Good!")
 
 
 
