@@ -1,3 +1,11 @@
+# Steps to Build Analysis Ready Inventory
+# 0. Take only the fields we need from OPI, BMI or any other inventory. GIS Clean-up: Eliminate extra small polygons and simplify the polygons. 
+#	Generate HA, MUNO, ARAID field. Check and fix obvious errors (number field, nulls, etc.)
+# *THIS SCRIPT* 2. Parse out SPCOMP (into group species) and create n populate ECOPRI and ECONUM fields.
+# 2. Build and ECOGRP, PFT, SFU, LGFU, LGDS and LGCLS
+
+
+######################################################
 # There are two main upgrades to this script since the v1 (ArcMap) edition.
 # 1. the end-user gets to group species, instead of creating over 80 species fields. The end-user can also customize this grouping.
 # 2. This script runs faster.  The trick is to export the fc with zero records, add fields to the empty fc, then append the original data to the new fc.
@@ -182,6 +190,14 @@ def main(inputfc,outputfc,spfield, spc_group_method):
 		logger.print2("To find these errors use this query:\n%s LIKE 'Error%'")
 	else:
 		logger.print2("\nNo SPCOMP parsing error found! All Good!")
+
+
+
+
+
+	def econum(inputfc):
+		pass
+
 
 
 
