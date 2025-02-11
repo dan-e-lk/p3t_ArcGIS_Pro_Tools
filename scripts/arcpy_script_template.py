@@ -17,10 +17,14 @@ def chc(inputfc):
 
 	# here are some lines I write all the time:
 	existingFields = [str(f.name).upper() for f in arcpy.ListFields(inputfc)]
-	oid_fieldname = arcpy.Describe(input_fc).OIDFieldName
+	oid_fieldname = arcpy.Describe(inputfc).OIDFieldName
 	count_orig = int(arcpy.management.GetCount(inputfc)[0])
 	arcpy.AddField_management(in_table = outputfc, field_name = check_field, field_type = "TEXT", field_length = "120")
 	arcpy.FeatureClassToFeatureClass_conversion(in_features=inputfc, out_path=os.path.split(outputfc)[0], out_name=os.path.split(outputfc)[1], where_clause=select_none_sql)
+	with arcpy.da.UpdateCursor(inputfc, existingFields) as cursor:
+		for row in cursor:
+			row[1] = 4
+		    cursor.updateRow(row)	
 
 
 if __name__ == '__main__':
