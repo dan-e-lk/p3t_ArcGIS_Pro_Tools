@@ -78,25 +78,34 @@ def main(inputfc,outputfc,spfield, spc_group_method):
 	select_none_sql = "%s<0"%oid_fieldname # "OBJECTID < 0" will select zero records
 	arcpy.FeatureClassToFeatureClass_conversion(in_features=inputfc, out_path=os.path.split(outputfc)[0], out_name=os.path.split(outputfc)[1], where_clause=select_none_sql)
 
-
 	## make fields (also add SPC_CHECK field)
 	# get list of species groups (original or alternative)
+	existingFields = [str(f.name).upper() for f in arcpy.ListFields(outputfc)]
 	spc_grp_lst = list(set([row[spc_group_method] for row in l_tbl_spp]))
 	spc_grp_lst.sort()
 	all_new_field_lst = spc_grp_lst.copy()
 	for spc_grp in spc_grp_lst:
 		logger.print2("Creating a new field: %s"%spc_grp)
-		arcpy.AddField_management(in_table = outputfc, field_name = spc_grp, field_type = "SHORT")
+		if spc_grp not in existingFields:
+			arcpy.AddField_management(in_table = outputfc, field_name = spc_grp, field_type = "SHORT")
+		else:
+			logger.print2("\t%s already exists"%spc_grp)
 	# SPC Check field
 	check_field = 'SPC_Check'
 	logger.print2("Creating a new field: %s"%check_field)
-	arcpy.AddField_management(in_table = outputfc, field_name = check_field, field_type = "TEXT", field_length = "120")
+	if check_field not in existingFields:
+		arcpy.AddField_management(in_table = outputfc, field_name = check_field, field_type = "TEXT", field_length = "120")
+	else:
+		logger.print2("\t%s already exists"%check_field)		
 	all_new_field_lst.append(check_field)
 	# species set fields
 	spc_set_lst = list(spc_set_tbl.keys()) # i.e. ['UH','LH','ALLCON','ALLHWD'] # do not change these values!
 	for spc_set in spc_set_lst:
 		logger.print2("Creating a new field: %s"%spc_set)
-		arcpy.AddField_management(in_table = outputfc, field_name = spc_set, field_type = "SHORT")
+		if spc_set not in existingFields:
+			arcpy.AddField_management(in_table = outputfc, field_name = spc_set, field_type = "SHORT")
+		else:
+			logger.print2("\t%s already exists"%spc_set)
 		all_new_field_lst.append(spc_set)
 
 	## append records from inputfc to outputfc.

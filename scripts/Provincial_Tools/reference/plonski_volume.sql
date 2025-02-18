@@ -10,6 +10,7 @@ tbl_plonski_metrics.METRIC, forest.POLYID, forest.HA, forest.HT, forest.STKG, fo
 ([tbl_plonski_metrics].[MH]*([forest].[MH]/100)*[STKG]) AS M_MH, ([tbl_plonski_metrics].[OH]*([forest].[MR]/100)*[STKG]) AS M_MR, 
 ([tbl_plonski_metrics].[OH]*(([AB]+[AW])/100)*[STKG]) AS M_AX, ([tbl_plonski_metrics].[OH]*([forest].[BD]/100)*[STKG]) AS M_BD, 
 ([tbl_plonski_metrics].[OH]*([forest].[BE]/100)*[STKG]) AS M_BE, ([tbl_plonski_metrics].[OH]*(([QR]+[OB]+[OW])/100)*[STKG]) AS M_QR, 
+
 ([tbl_plonski_metrics].[OH]*(([forest].[OH]+[CH]+[EX]+[IW])/100)*[STKG]) AS M_OH
 
 FROM (forest INNER JOIN tbl_ac ON forest.AGE = tbl_ac.AGE) 

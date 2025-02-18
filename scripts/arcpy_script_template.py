@@ -26,6 +26,11 @@ def chc(inputfc):
 			row[1] = 4
 		    cursor.updateRow(row)	
 
+	# Make Layer, Select, and Calculate Field
+	arcpy.management.MakeFeatureLayer(inputfc, "temp_lyr")
+	arcpy.management.SelectLayerByAttribute("temp_lyr", "NEW_SELECTION", "")
+	arcpy.management.CalculateField("temp_lyr", fieldName, expression, code_block=code_block)
+
 
 if __name__ == '__main__':
 	

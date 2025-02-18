@@ -28,11 +28,12 @@ import arcpy
 import os, csv
 import pandas as pd
 
-man_fields=['POLYTYPE','HA','HT','STKG','SC','AGE', 'PW','PR','PJ','SB','SW','BF','CE','LA','HE','OC','OH','PO','PB','BW','YB','MH','MR','AB','AW','BD','BE','QR','OB','OW','CH','EX','IW']
+man_fields=['POLYTYPE','STKG','SC','AGE', 'PW','PR','PJ','SB','SW','BF','CE','LA','HE','OC','OH','PO','PB','BW','YB','MH','MR','AB','AW','BD','BE','QR','OB','OW','CH','EX','IW']
 
 def plonski(inputfc, metrics, add_extra_field):
 	
 	# loading csv files to memory
+	logger.print2("Here are mandatory fields your inventory must have in order for this tool to run properly:\n%s\n"%man_fields)
 	logger.print2("loading csv files...")
 	tbl_ac = 'tbl_ac.csv'
 	parent_folder = os.path.split(__file__)[0]
@@ -81,7 +82,7 @@ def plonski(inputfc, metrics, add_extra_field):
 
 
 	# adding metric fields
-	prefix = 'PLONSK_'
+	prefix = 'PLONSKI_'
 	for metric in metrics:
 		new_fname = prefix+metric # 'PLONSK_GTV'
 		logger.print2("Adding a new field: %s"%new_fname)
@@ -108,7 +109,7 @@ def plonski(inputfc, metrics, add_extra_field):
 	spc_metrics = {'M_'+i:0 for i in ['PW','PR','PJ','SB','SW','BF','CE','LA','HE','OC','PO','PB','BW','YB','MH','MR','AX','BD','BE','QR','OH']} # metric (eg. GTV) for each species group
 	for metric in metrics:
 		logger.print2("\nCalculating and populating %s for all records..."%metric)
-		metric_fname = 'PLONSK_'+metric
+		metric_fname = 'PLONSKI_'+metric
 		if add_extra_field:
 			extra_metric_fname = metric_fname + '_EXTRA'
 		with arcpy.da.UpdateCursor(inputfc, f, "POLYTYPE='FOR'") as cursor:
@@ -167,8 +168,11 @@ if __name__ == '__main__':
 	
 	# gather inputs
 	inputfc = arcpy.GetParameterAsText(0)
-	metrics = ['GTV','BA','STEMS','NMV'] # ['BA','GTV','MAI','NMV','STEMS','DBH','CAI']
-	add_extra_field = False
+	metrics = arcpy.GetParameterAsText(1) # can pick multiple from 'BA','GTV','MAI','NMV','STEMS','DBH','CAI'. eg. GTV;BA;STEMS
+	debug = arcpy.GetParameterAsText(2) # true or false
+
+	metrics = list(set(metrics.split(';'))) # eg. ['BA','GTV',NMV']
+	add_extra_field = True if debug == 'true' else False
 
 	######### logfile stuff
 
@@ -192,6 +196,7 @@ if __name__ == '__main__':
 
 	##########
 
+	logger.print2("Input Parameters:\n%s\n%s\n%s\n\n"%(inputfc,metrics,add_extra_field))
 	# run the main function(s)
 	plonski(inputfc, metrics, add_extra_field)
 

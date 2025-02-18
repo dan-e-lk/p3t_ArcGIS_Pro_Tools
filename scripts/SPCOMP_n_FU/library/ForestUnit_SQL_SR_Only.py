@@ -43,10 +43,6 @@ SR_GLSL_LG_SFU = {
 
 
 
-
-
-
-
 if __name__ == '__main__':
     pass
     # for k,v in NER_GLSL_SFU_Nsiah.items():
