@@ -1,0 +1,39 @@
+Daniel's notes while working on SFU SQLs.
+
+# EW+EX => EX group
+# CE+CW => CE group
+# SB+SX => SB group
+
+ AND SFU IS NULL
+
+NEBOR SFU based on v9_ROD2023 SQL, rebuilt with group species and less parenthesis
+
+PW1: 0.08%
+(PW+PR+HE+SW >= 40 AND PW>=30)
+
+PRW: 0.1%
+(PW+PR+SW+HE>= 40 AND PW+PR>= 30)
+
+LH1: 0.2%
+((AB + EX + YB >= 20 AND ECONUM IN (119,120,123,129,130,131)) OR PB >= 70)
+
+TH1: 0.4%
+(AB+EX+MH+YB+MR+HE >= 30)
+
+SBOG: <5%
+(SB+LA+CE>=70 AND SC=4 AND ECONUM IN (126,136,137))
+
+SB1: <13%
+(SB>=80 AND AB<=10 AND ECONUM IN (127,128,129,222,223,224))
+
+PJ1: <3.3%  (if just PJ>=70, then it's about 4.5%)
+(PJ>=90 OR (PJ>=70 AND PO+PT+BW+YB+MR+MH+AB+EX+PB<=20 AND ECONUM IN (12,33,34,35,48,49,50)))
+
+LC1: <29%
+(CE+LA+SB+BF+SW>= 70 AND ECONUM IN (127,128,129,222,223,224,136,137))
+
+PJ2: <8%
+((PJ+SB+PR+PW>=70 OR (PJ>=30 AND PJ+SB+BF+SW+PW+PR+CE+LA>=70)) AND PJ+PW+PR>=SB+SW+CE)
+
+SP1: <54% minus PJ2, PJ1 and LC1 probably...
+(SB+SW+BF+CE+LA+PW+PJ+PR+HE>=70 AND (BF+CE+PW+SW+HE<=20 OR PJ+PR+LA>=30))

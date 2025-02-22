@@ -70,7 +70,7 @@ def merge_all_csv(csv_list, output_folder, just_common_fields = False):
 	new_txt_path = os.path.join(output_folder,new_txt_name)
 
 	# with open(new_csv_path, 'wb') as csvfile:
-	with open(new_csv_path, 'w') as csvfile:
+	with open(new_csv_path, 'w', newline='') as csvfile: # need the newline='' for python3, otherwise will skip lines
 		# well, dict writer doesn't work unless all your csvs have exact same fieldnames. so we will do it the hard way.
 		writer = csv.writer(csvfile, delimiter=',', quotechar='"')
 		writer.writerow(fields)

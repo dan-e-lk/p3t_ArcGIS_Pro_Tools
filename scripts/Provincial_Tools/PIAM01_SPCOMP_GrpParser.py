@@ -16,6 +16,8 @@ import os, csv
 
 # Species set is a speices group combinations that was hardcoded in Larry's ProcessPI script (under update spp combos)
 # The key is the species set name (also a new fieldname) and the value is the list of species percentages that will be all added up.
+# in the future though, I want to avoid using species set. It is rarely used and it's hard to fine tune the forest unit sql using these sets
+# 	right now these are still being used for LGFU
 spc_set_tbl = {
 	'UH':		['MH','MR','QR','OW','OB','YB'],
 	'LH':		['AB','EX','PB'],
