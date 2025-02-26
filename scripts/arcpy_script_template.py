@@ -5,15 +5,22 @@
 
 import arcpy
 import os, csv
+import pandas as pd
 
 
 def chc(inputfc):
 	
-	# loading habitat_classification.csv to memory
+	# loading csv to list of dictionary
 	tbl_chc = 'habitat_classification.csv'
 	parent_folder = os.path.split(__file__)[0]
 	l_tbl_chc = list(csv.DictReader(open(os.path.join(parent_folder,tbl_chc))))
 	logger.print2(tbl_chc)
+
+	# loading csv to pandas dataframe
+	tbl_plonski = 'tbl_plonski_metrics.csv'
+	df = pd.read_csv(tbl_plonski)
+	# https://pandas.pydata.org/docs/getting_started/intro_tutorials/03_subset_data.html
+
 
 	# here are some lines I write all the time:
 	existingFields = [str(f.name).upper() for f in arcpy.ListFields(inputfc)]
@@ -24,7 +31,7 @@ def chc(inputfc):
 	with arcpy.da.UpdateCursor(inputfc, existingFields) as cursor:
 		for row in cursor:
 			row[1] = 4
-		    cursor.updateRow(row)	
+			cursor.updateRow(row)	
 
 	# Make Layer, Select, and Calculate Field
 	arcpy.management.MakeFeatureLayer(inputfc, "temp_lyr")

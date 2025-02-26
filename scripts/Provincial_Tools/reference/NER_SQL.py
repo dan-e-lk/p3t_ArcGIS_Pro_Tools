@@ -37,7 +37,9 @@ NER_Boreal_v9_ROD2023 = {
     16: ['MC1',     """ ((("BF" <= 20 AND ("SW" + "SX") <= 20 AND ("CE" + "CW") <= 20 AND ("PJ" + "PR" + "LA") >= 20) AND ("ECOSITE_GEORANGEANDNUMBER" IN ('B012', 'B014', 'B035', 'B037', 'B038', 'B050', 'B052', 'B053', 'B065', 'B067', 'B068',  'G012', 'G014', 'G035', 'G037', 'G037', 'G050', 'G052', 'G053', 'G065', 'G067', 'G068')))  OR ("PJ" + "PR" >= 50)) AND <USER_DEFINED_SFU_FIELD_NAME> IS NULL """,           "",             """MIXEDWOOD CONIFER FRESH COARSE"""],
     17: ['MH2',     """ (("PO" + "PT" + "PL") + "BW" + "MH" + ("_BY" + "MR") + ("AB" + "EX" + "PB") >= 50) AND <USER_DEFINED_SFU_FIELD_NAME> IS NULL """,          "",            """MIXEDWOOD HARDWOOD MOIST FINE"""],
     18: ['MC2',     """ ("SB" + ("SW" + "SX") + "BF" + ("CE" + "CW") + "LA" + "PW" + "PJ" + "PR" > 50) AND <USER_DEFINED_SFU_FIELD_NAME> IS NULL """,          "",            """MIXEDWOOD CONIFER MOIST FINE"""],
-    19: ['UDF',     """ ("POLYTYPE" = 'FOR') AND <USER_DEFINED_SFU_FIELD_NAME> IS NULL """,            "",            """UNDEFINED"""],
+    
+    # this is unnecessary - we don't want UDF
+    # 19: ['UDF',     """ ("POLYTYPE" = 'FOR') AND <USER_DEFINED_SFU_FIELD_NAME> IS NULL """,            "",            """UNDEFINED"""],
 
     22: ['SB1',     """ ("POLYTYPE" = 'FOR' AND <USER_DEFINED_SFU_FIELD_NAME> IS NULL) """,            """OR (<USER_DEFINED_SFU_FIELD_NAME> = 'SP1' AND "ECOSITE_GEORANGEANDNUMBER" IN ('B126', 'B127', 'B128', 'B129', 'B136', 'B222', 'B223', 'B224'))"""], # THE REASON WHY I INCLUDED THE SEEMINGLY UNNECESSARY FIRST PART OF THE SQL IS BECAUSE THE TOOL HAS AN OPTION TO NOT USE ECOSITE. IF THE USER DECIDES NOT TO USE ECOSITE, ONLY THE FIRST PART OF THE SQL WILL BE USED AND IT WILL BASICALLY SELECT NOTHING.
     23: ['LC1',     """ ("POLYTYPE" = 'FOR' AND <USER_DEFINED_SFU_FIELD_NAME> IS NULL) """,            """OR (<USER_DEFINED_SFU_FIELD_NAME> = 'SF1' AND "ECOSITE_GEORANGEANDNUMBER" IN ('B126', 'B127', 'B128', 'B129', 'B136', 'B222', 'B223', 'B224'))"""],
@@ -45,4 +47,10 @@ NER_Boreal_v9_ROD2023 = {
 
     28: ['SP1',    """ (<USER_DEFINED_SFU_FIELD_NAME> = 'SB1' AND "DEVSTAGE" IN('NEXPLANT','ESTPLANT')) """,            ""],
     29: ['SP1',    """ (<USER_DEFINED_SFU_FIELD_NAME> = 'SF1' AND "DEVSTAGE" IN('NEXPLANT','ESTPLANT') AND ("BF" + "LA" <=20)) """,            ""],
+    
+    # adding this to catch all:
+    41: ['MH2',     """ <user_defined_sfu_field_name> IS NULL AND ("Po" + "Pt" + "Pl") + "Bw" + ("Mh" + "Ms" + "Mr") + "_By" + ("Ab" + "Ew" + "Pb") + "OH" > "Sb" + ("Sw" + "Sx") + "Bf" + ("Ce" + "Cw") + "La" + "Pw" + "Pj" + "Pr" + "OC" """,            ""],
+    42: ['MC2',     """ <user_defined_sfu_field_name> IS NULL """,            ""],
 }
+
+
