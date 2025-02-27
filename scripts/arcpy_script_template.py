@@ -36,6 +36,7 @@ def chc(inputfc):
 	# Make Layer, Select, and Calculate Field
 	arcpy.management.MakeFeatureLayer(inputfc, "temp_lyr")
 	arcpy.management.SelectLayerByAttribute("temp_lyr", "NEW_SELECTION", "")
+	num_selected = int(arcpy.management.GetCount("temp_lyr")[0])
 	arcpy.management.CalculateField("temp_lyr", fieldName, expression, code_block=code_block)
 
 

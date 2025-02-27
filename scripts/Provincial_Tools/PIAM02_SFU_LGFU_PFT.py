@@ -21,15 +21,16 @@ import arcpy
 import os, csv
 import pandas as pd
 
-man_fields = ['POLYTYPE','PRI_ECO']
+man_fields = ['POLYTYPE','PRI_ECO','SC']
 sql_tbl_csv = 'tbl_sql_classify.csv' # this should be saved in the same parent folder as this script
 
 
-def populate_fu(inputfc,skip_eco_if_exists):
+def populate_fu(inputfc,region,field,skip_eco_if_exists):
 	
 	# loading csv to pandas dataframe
 	df = pd.read_csv(sql_tbl_csv)
 	df = df[['REGION','FIELD','SQL_ORDER','SQL_NAME','SQL_SYNTAX']] # select only the fields we need
+	df = df[df['REGION']==region]
 	# logger.print2(df)
 
 	# housekeeping first
@@ -89,7 +90,7 @@ def populate_fu(inputfc,skip_eco_if_exists):
 				cursor.updateRow(row)
 
 		# warn if too many errors - how many is too many?
-		logger.print2("Number of records where ECONUM was invalid (0 or 999 is also invalid): %s"%ecoerror_counter)
+		logger.print2("Number of records where ECONUM was invalid (values such as 0 or 999 are invalid): %s"%ecoerror_counter)
 		eco_err_perc = round(ecoerror_counter*100/forest_rec_counter,2)
 		if eco_err_perc > 5:
 			logger.print2("WARNING: Many errors (%s%%) detected while populating ECONUM from PRI_ECO.",'w')
@@ -97,6 +98,54 @@ def populate_fu(inputfc,skip_eco_if_exists):
 			if eco_err_perc > 30:
 				raise Exception("Too many ECONUM error! Check your PRI_ECO field.")
 
+
+	# Populate SFU
+	f = 'SFU'
+	if f in field:
+		execute_sqls(f, inputfc, existingFields, df)
+
+	# Populate PFT
+
+
+	# Populate ECOGRP, LGFU, LGDS, LGCLS
+
+
+
+
+
+def execute_sqls(f, inputfc, existingFields, df):
+	logger.print2("Adding a new field: %s"%f)
+	if f not in existingFields:
+		f_exist = False
+		arcpy.AddField_management(in_table = inputfc, field_name = f, field_type = "TEXT", field_length = "10")
+	else:
+		f_exist = True
+		logger.print2("\t%s field already exists"%f)
+
+	# prepare layer file so we can select and calculate field on them
+	lyr = '%s_lyr'%f
+	arcpy.management.MakeFeatureLayer(inputfc, lyr)
+	# wipe out the values if the field existed before
+	if f_exist:
+		logger.print2("\tDeleting existing values in %s field"%f)
+		arcpy.management.CalculateField(lyr, f, 'None')
+
+	# get SQLs in order
+	select_df = df[df["FIELD"]==f].sort_values(by=['SQL_ORDER']) # select (SFUs) and sort by SQL_ORDER
+
+	# loop through the select_df
+	logger.print2("\nPopulating %s"%f)
+	for index, row in select_df.iterrows():
+		sql_order = row['SQL_ORDER']
+		sql_name = row['SQL_NAME']
+		sql = row['SQL_SYNTAX'] + ' AND %s IS NULL'%f #########################
+		logger.print2("\t%s. %s:"%(sql_order,sql_name))
+		logger.print2("\t%s"%sql)
+		arcpy.management.SelectLayerByAttribute(lyr, "NEW_SELECTION", sql)
+		num_selected = int(arcpy.management.GetCount(lyr)[0])
+		logger.print2("\t%s records selected. Populating values..."%num_selected)
+		arcpy.management.CalculateField(lyr, f, "'%s'"%sql_name)
+		logger.print2("\t\tDone\n")		
 
 
 
@@ -127,7 +176,13 @@ if __name__ == '__main__':
 	
 	# gather inputs
 	inputfc = arcpy.GetParameterAsText(0)
+	region = 'NEBOR' # one of NEBOR, NWBOR, GLSL
+	field = 'SFU' # can pick multiples from ['SFU','LGFU','PFT']  eg. 'SFU;LGFU;PFT'
 	skip_eco_if_exists = False # skip populating values if ECONUM already exists
+
+	field = list(set(field.split(';'))) # eg. ['SFU','PFT']
+	if 'PFT' in field and 'SFU' not in field:
+		field.append('SFU') # PFT cannot be generated without SFU
 
 	######### logfile stuff
 
@@ -152,7 +207,7 @@ if __name__ == '__main__':
 	##########
 
 	# run the main function(s)
-	populate_fu(inputfc,skip_eco_if_exists)
+	populate_fu(inputfc,region,field,skip_eco_if_exists)
 
 	# finish writing the logfile
 	logger.log_close()
