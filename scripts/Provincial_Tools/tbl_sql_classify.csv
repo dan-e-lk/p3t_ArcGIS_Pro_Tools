@@ -141,10 +141,10 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 140,NWBOR,PFT,6,POP,SFU='POSHA' or SFU='PODEE',,,
 141,NWBOR,PFT,7,BWT,SFU='BWSHA' or SFU='BWDEE',,,
 142,NWBOR,PFT,8,TOL,SFU='OTHHD',,,
-300,NEBOR,ECOGRP,1,ConLow,Econum = 126 or Econum = 127 or Econum = 128 or Econum = 129 or Econum = 134 or Econum = 135 or Econum = 136 or Econum = 137 or Econum = 222 or Econum = 223 or Econum = 224,,,
-301,NEBOR,ECOGRP,2,HwdLow,Econum = 70 or Econum = 71 or Econum = 119 or Econum = 120 or Econum = 130 or Econum = 131,,,
-302,NEBOR,ECOGRP,3,PineES,Econum = 12 or Econum = 34 or Econum = 49 or Econum = 35 or Econum = 50,,,
-303,NEBOR,ECOGRP,4,ShalES,Econum = 11 or Econum = 12 or Econum = 14 or Econum = 15 or Econum = 16 or Econum = 17 or Econum = 18 or Econum = 19 or Econum = 23 or Econum = 24 or Econum = 25 or Econum = 26 or Econum = 27 or Econum = 28,,,
+300,NEBOR,ECOGRP,1,ConLow,"ECONUM IN (126,127,128,129,134,135,136,137,222,223,224)",,,Econum = 126 or Econum = 127 or Econum = 128 or Econum = 129 or Econum = 134 or Econum = 135 or Econum = 136 or Econum = 137 or Econum = 222 or Econum = 223 or Econum = 224
+301,NEBOR,ECOGRP,2,HwdLow,"ECONUM IN (70,71,119,120,130,131)",,,Econum = 70 or Econum = 71 or Econum = 119 or Econum = 120 or Econum = 130 or Econum = 131
+302,NEBOR,ECOGRP,3,PineES,"ECONUM IN (12,34,35,49,50)",,,Econum = 12 or Econum = 34 or Econum = 49 or Econum = 35 or Econum = 50
+303,NEBOR,ECOGRP,4,ShalES,"ECONUM IN (11,12,14,15,16,17,18,19,23,24,25,26,27,28)",,,Econum = 11 or Econum = 12 or Econum = 14 or Econum = 15 or Econum = 16 or Econum = 17 or Econum = 18 or Econum = 19 or Econum = 23 or Econum = 24 or Econum = 25 or Econum = 26 or Econum = 27 or Econum = 28
 304,NEBOR,ECOGRP,5,NA,EcoNum>0,,,
 310,NEBOR,SFU,1,PR1,PR>=70,"Red Pine, Plantations",Confirmed,same as v9 ROD2023
 ,NEBOR,SFU,2,PW1,(PW+PR+HE+SW >= 40 AND PW>=30),"White Pine, Shelterwood",Added and confirmed,removed SX from v9_ROD2023
@@ -162,9 +162,8 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 322,NEBOR,SFU,14,BW1,PO+BW+YB+MR+UH+MH+LH+OH>=70,White Birch,Confirmed,same as v9 ROD2023
 323,NEBOR,SFU,15,MH1,"(BF<=20 AND SW<=20 AND CE<=20 AND PO+PT+PL+BW+MH+YB+MR+AB+EX+PB>=50 AND PJ+PR<=50 AND PJ+PR>=20 AND ECONUM IN (16,19,28,40,43,55,59,70,76))",Mixedwood Hardwood Fresh Coarse,Confirmed,same as v9 ROD2023 but removed SX from the 2nd inequality because SB group is SB+SX.
 324,NEBOR,SFU,16,MC1,"((BF<=20 AND SW<=20 AND CE<=20 AND PJ+PR+LA>=20 AND ECONUM IN (12,14,35,37,38,50,52,53,65,67,68)) OR PJ+PR>=50)",Mixedwood Conifer Fresh Coarse,Confirmed,same as v9 ROD2023 but removed SX from the 2nd inequality because SB group is SB+SX.
-325,NEBOR,SFU,17,MH2,PO+PT+PL+BW+MH+YB+MR+AB+EX+PB>=50,Mixedwood Hardwood Moist Fine,Confirmed,same as v9 ROD2023
-326,NEBOR,SFU,18,MC2,SB+SW+BF+CE+LA+PW+PJ+PR>50,Mixedwood Conifer Moist Fine,Confirmed,same as v9 ROD2023
-327,NEBOR,SFU,19,UDF,POLYTYPE = 'FOR',Undefined,Confirmed,same as v9 ROD2023
+325,NEBOR,SFU,17,MH2,ALLHWD > ALLCON,Mixedwood Hardwood Moist Fine,Confirmed,"This looks different, but essentially same as ROD2023 since it later catches all rest of undefined as MH2 or MC2"
+326,NEBOR,SFU,18,MC2,POLYTYPE = 'FOR',Mixedwood Conifer Moist Fine,Confirmed,"This looks different, but essentially same as ROD2023 since it later catches all rest of undefined as MH2 or MC2"
 350,NEBOR,LGFU,1,PR1,(PR>=70),,,
 351,NEBOR,LGFU,2,PRW,(PW+PR+SW+HE>= 40) AND (PW>=30),,,
 352,NEBOR,LGFU,3,PRW,(PW+PR>= 40),,,

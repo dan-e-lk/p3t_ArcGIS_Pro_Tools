@@ -57,3 +57,11 @@ PO+PT+PL+BW+MH+YB+MR+AB+EX+PB>=50 AND SFU IS NULL
 MC2: picks up rest of the conifer
 SB+SW+BF+CE+LA+PW+PJ+PR>50 AND SFU IS NULL
 
+
+capture leftovers:
+MH2:
+ALLHWD > ALLCON AND SFU IS NULL
+
+MC2:
+
+

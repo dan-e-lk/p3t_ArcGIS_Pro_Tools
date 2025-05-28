@@ -3,8 +3,8 @@ version 1.0
 AR_Master has many separate components. This script merges same type of activies together into one feature class. 
 for example, all harvests 02 and greater into one feature class
 Not all types of activities are included in this script.
-	the script will append on FTG, RGN, and HRV.
-	the script does not touch SIP, Roads and TND at the moment."""
+	the script will append on FTG, RGN, SIP, TND, Roads and HRV.
+"""
 
 
 import arcpy
@@ -95,12 +95,12 @@ class Ar_ar:
 		new_fc_name = 'Regen_All_02_n_up'
 		note = """
 		Remember:
-		SEED and PLANT may occur more than once. Refer to the ~*2 fields such as AR_YEAR2, SP12, SP22 for those second occurances.
+SEED and PLANT may occur more than once. Refer to the ~*2 fields such as AR_YEAR2, SP12, SP22 for those second occurances.
 		"""
-		self.logger.print2(note)
 
 		# create feature dataset
 		self.logger.print2("\n## Working on %s"%DS_name)
+		self.logger.print2(note)
 		self.logger.print2("\tMaking new Feature dataset: %s"%DS_name)
 		arcpy.Delete_management(DS_name)
 		arcpy.CreateFeatureDataset_management(self.arar_gdb_path, DS_name, self.projfile)
@@ -129,12 +129,12 @@ class Ar_ar:
 		new_fc_name = 'Tend_All_02_n_up'
 		note = """
 		Remember:
-		Tending events may occur more than once. Refer to the ~*2 fields such as TRTMTHD2, TRTCAT2, etc. for those second (and third) occurances.
+Tending events may occur more than once. Refer to the ~*2 fields such as TRTMTHD2, TRTCAT2, etc. for those second (and third) occurances.
 		"""
-		self.logger.print2(note)
 
 		# create feature dataset
 		self.logger.print2("\n## Working on %s"%DS_name)
+		self.logger.print2(note)
 		self.logger.print2("\tMaking new Feature dataset: %s"%DS_name)
 		arcpy.Delete_management(DS_name)
 		arcpy.CreateFeatureDataset_management(self.arar_gdb_path, DS_name, self.projfile)
@@ -162,10 +162,10 @@ class Ar_ar:
 		append_lst = [os.path.join(ar_master_path,DS_name,i) for i in ['SIP_Mech','SIP_PB']]
 		new_fc_name = 'SIP_All_02_n_up'
 		note = """
-		Remember:
-		Prescribed Burn layer has a lot of small circles 78m2 and 155m2 in size.
-		So if you use eliminate, then you will lose a lot of records.
-		Mechanical Site Prep layer usually has the most records (~80k).
+Remember:
+Prescribed Burn layer has a lot of small circles 78m2 and 155m2 in size.
+So if you use eliminate, then you will lose a lot of records.
+Mechanical Site Prep layer usually has the most records (~80k).
 		"""
 		self.logger.print2(note)
 
@@ -190,6 +190,38 @@ class Ar_ar:
 
 		self.logger.print2("\t%s complete!"%DS_name)
 
+	def road(self):
+		# variables
+		DS_name = "Roads" # try to stick to the same DS name as the AR Master
+		template = 'Roads/Roads17'
+		append_lst = [os.path.join(ar_master_path,DS_name,i) for i in ['Roads06']]
+		new_fc_name = 'Roads_All_06_n_up'
+		note = ""
+
+		# create feature dataset
+		self.logger.print2("\n## Working on %s"%DS_name)
+		self.logger.print2(note)
+		self.logger.print2("\tMaking new Feature dataset: %s"%DS_name)
+		arcpy.Delete_management(DS_name)
+		arcpy.CreateFeatureDataset_management(self.arar_gdb_path, DS_name, self.projfile)
+		dest_feature_dataset = os.path.join(self.arar_gdb_path, DS_name)
+
+		# start copying over the template
+		harv_temp_path = os.path.join(self.ar_master_path,template)
+		self.logger.print2("\tCopying over %s..."%template)
+		arcpy.FeatureClassToFeatureClass_conversion(harv_temp_path, dest_feature_dataset, new_fc_name)
+
+		# append all other ones to the new_fc_name. (do it on the Pro first then grab the python snippet)
+		self.logger.print2("\tAppending the following FCs:\n%s"%append_lst)
+		ap_input = ''
+		for fc in append_lst:
+			ap_input += "%s;"%fc
+		arcpy.management.Append(inputs=ap_input, target=new_fc_name, schema_type="NO_TEST")
+
+		self.logger.print2("\t%s complete!"%DS_name)
+
+
+
 
 if __name__ == '__main__':
 
@@ -212,11 +244,12 @@ if __name__ == '__main__':
 
 	#### below: you can comment out the ones that you don't need to run
 	## Rolling up all fcs in the same category into a single fc.
-	# ar.harvest()
-	# ar.est()
-	# ar.regen()
-	# ar.tending()
+	ar.harvest()
+	ar.est()
+	ar.regen()
+	ar.tending()
 	ar.sip()
+	ar.road()
 
 	# writing the log file
 	logger.log_close()

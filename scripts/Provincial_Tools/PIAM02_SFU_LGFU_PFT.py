@@ -105,16 +105,20 @@ def populate_fu(inputfc,region,field,skip_eco_if_exists):
 		execute_sqls(f, inputfc, existingFields, df)
 
 	# Populate PFT
-
+	f = 'PFT'
+	if f in field:
+		execute_sqls(f, inputfc, existingFields, df)
 
 	# Populate ECOGRP, LGFU, LGDS, LGCLS
-
+	if 'LGFU' in field:
+		for LG_field in ['ECOGRP','LGFU','LGDS','LGCLS']: # must be in this order
+			execute_sqls(LG_field, inputfc, existingFields, df)
 
 
 
 
 def execute_sqls(f, inputfc, existingFields, df):
-	logger.print2("Adding a new field: %s"%f)
+	logger.print2("\n\nAdding a new field: %s"%f)
 	if f not in existingFields:
 		f_exist = False
 		arcpy.AddField_management(in_table = inputfc, field_name = f, field_type = "TEXT", field_length = "10")
@@ -135,6 +139,7 @@ def execute_sqls(f, inputfc, existingFields, df):
 
 	# loop through the select_df
 	logger.print2("\nPopulating %s"%f)
+	logger.print2("NOTE: The follwing SQLs use grouped species. For example CE=CE+CW and all Elms are EX.")
 	for index, row in select_df.iterrows():
 		sql_order = row['SQL_ORDER']
 		sql_name = row['SQL_NAME']
@@ -149,35 +154,13 @@ def execute_sqls(f, inputfc, existingFields, df):
 
 
 
-	# # loading habitat_classification.csv to memory
-	# tbl_chc = 'habitat_classification.csv'
-	# parent_folder = os.path.split(__file__)[0]
-	# l_tbl_chc = list(csv.DictReader(open(os.path.join(parent_folder,tbl_chc))))
-	# logger.print2(tbl_chc)
-
-	# # here are some lines I write all the time:
-	# existingFields = [str(f.name).upper() for f in arcpy.ListFields(inputfc)]
-	# oid_fieldname = arcpy.Describe(inputfc).OIDFieldName
-	# count_orig = int(arcpy.management.GetCount(inputfc)[0])
-	# arcpy.AddField_management(in_table = outputfc, field_name = check_field, field_type = "TEXT", field_length = "120") # SHORT, LONG, FLOAT, DOUBLE
-	# arcpy.FeatureClassToFeatureClass_conversion(in_features=inputfc, out_path=os.path.split(outputfc)[0], out_name=os.path.split(outputfc)[1], where_clause=select_none_sql)
-	# with arcpy.da.UpdateCursor(inputfc, existingFields) as cursor:
-	# 	for row in cursor:
-	# 		row[1] = 4
-	# 		cursor.updateRow(row)	
-
-	# # Make Layer, Select, and Calculate Field
-	# arcpy.management.MakeFeatureLayer(inputfc, "temp_lyr")
-	# arcpy.management.SelectLayerByAttribute("temp_lyr", "NEW_SELECTION", "")
-	# arcpy.management.CalculateField("temp_lyr", fieldName, expression, code_block=code_block)
-
 
 if __name__ == '__main__':
 	
 	# gather inputs
 	inputfc = arcpy.GetParameterAsText(0)
-	region = 'NEBOR' # one of NEBOR, NWBOR, GLSL
-	field = 'SFU' # can pick multiples from ['SFU','LGFU','PFT']  eg. 'SFU;LGFU;PFT'
+	region = arcpy.GetParameterAsText(1) # one of NEBOR, NWBOR, GLSL
+	field = arcpy.GetParameterAsText(2) # can pick multiples from ['SFU','LGFU','PFT']  eg. 'SFU;LGFU;PFT'
 	skip_eco_if_exists = False # skip populating values if ECONUM already exists
 
 	field = list(set(field.split(';'))) # eg. ['SFU','PFT']
