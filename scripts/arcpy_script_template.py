@@ -21,6 +21,9 @@ def chc(inputfc):
 	df = pd.read_csv(tbl_plonski)
 	# https://pandas.pydata.org/docs/getting_started/intro_tutorials/03_subset_data.html
 
+	# see if a fc is polygon or polyline
+	desc = arcpy.Describe(fc)
+	shape = desc.shapeType # eg. Polyline, Polygon, etc.
 
 	# here are some lines I write all the time:
 	existingFields = [str(f.name).upper() for f in arcpy.ListFields(inputfc)]
