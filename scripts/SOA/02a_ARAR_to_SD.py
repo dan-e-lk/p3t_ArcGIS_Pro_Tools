@@ -112,8 +112,8 @@ def ARAR_to_SD(input_arar, out_gdb):
 
 
 
-	arcpy.MakeFeatureLayer_management(in_features = fc, out_layer = lyrname)
-	arcpy.ApplySymbologyFromLayer_management(in_layer = lyrname, in_symbology_layer = template_lyr)
+	# arcpy.MakeFeatureLayer_management(in_features = fc, out_layer = lyrname)
+	# arcpy.ApplySymbologyFromLayer_management(in_layer = lyrname, in_symbology_layer = template_lyr)
 
 
 	# Add the output feature class to the map
