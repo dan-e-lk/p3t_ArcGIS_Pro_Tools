@@ -7,6 +7,7 @@ import arcpy
 import os, csv
 import pandas as pd
 
+arcpy.env.overwriteOutput = True
 
 def chc(inputfc):
 	
@@ -18,7 +19,7 @@ def chc(inputfc):
 
 	# loading csv to pandas dataframe
 	tbl_plonski = 'tbl_plonski_metrics.csv'
-	df = pd.read_csv(tbl_plonski)
+	df = pd.read_csv(tbl_plonski, na_filter=False) # if you don't disable na_filter, then it will change 'NA' 'N/A','null' into 'nan'
 	# https://pandas.pydata.org/docs/getting_started/intro_tutorials/03_subset_data.html
 
 	# see if a fc is polygon or polyline

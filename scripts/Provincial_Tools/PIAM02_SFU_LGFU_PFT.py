@@ -28,7 +28,7 @@ sql_tbl_csv = 'tbl_sql_classify.csv' # this should be saved in the same parent f
 def populate_fu(inputfc,region,field,skip_eco_if_exists):
 	
 	# loading csv to pandas dataframe
-	df = pd.read_csv(sql_tbl_csv)
+	df = pd.read_csv(sql_tbl_csv, na_filter=False)
 	df = df[['REGION','FIELD','SQL_ORDER','SQL_NAME','SQL_SYNTAX']] # select only the fields we need
 	df = df[df['REGION']==region]
 	# logger.print2(df)
@@ -98,6 +98,9 @@ def populate_fu(inputfc,region,field,skip_eco_if_exists):
 			if eco_err_perc > 30:
 				raise Exception("Too many ECONUM error! Check your PRI_ECO field.")
 
+	# Populate ECOGRP
+	f = 'ECOGRP'
+	execute_sqls(f, inputfc, existingFields, df)
 
 	# Populate SFU
 	f = 'SFU'
@@ -111,7 +114,7 @@ def populate_fu(inputfc,region,field,skip_eco_if_exists):
 
 	# Populate ECOGRP, LGFU, LGDS, LGCLS
 	if 'LGFU' in field:
-		for LG_field in ['ECOGRP','LGFU','LGDS','LGCLS']: # must be in this order
+		for LG_field in ['LGFU','LGDS','LGCLS']: # must be in this order
 			execute_sqls(LG_field, inputfc, existingFields, df)
 
 
@@ -161,7 +164,7 @@ if __name__ == '__main__':
 	inputfc = arcpy.GetParameterAsText(0)
 	region = arcpy.GetParameterAsText(1) # one of NEBOR, NWBOR, GLSL
 	field = arcpy.GetParameterAsText(2) # can pick multiples from ['SFU','LGFU','PFT']  eg. 'SFU;LGFU;PFT'
-	skip_eco_if_exists = False # skip populating values if ECONUM already exists
+	skip_eco_if_exists = True # skip populating values if ECONUM already exists
 
 	field = list(set(field.split(';'))) # eg. ['SFU','PFT']
 	if 'PFT' in field and 'SFU' not in field:

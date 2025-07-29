@@ -1,8 +1,8 @@
 RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
-1,NWBOR,ECOGRP,1,ConLow,Econum = 126 or Econum = 127 or Econum = 128 or Econum = 129 or Econum = 134 or Econum = 135 or Econum = 136 or Econum = 137 or Econum = 222 or Econum = 223 or Econum = 224,,,
-2,NWBOR,ECOGRP,2,HwdLow,Econum = 130 or Econum = 131 or Econum = 132 or Econum = 133,,,
-3,NWBOR,ECOGRP,3,UplCe,Econum = 13 or Econum = 36 or Econum = 51 or Econum = 66 or Econum = 84 or Econum = 100 or Econum = 115,,,
-4,NWBOR,ECOGRP,4,ShalES,Econum = 11 or Econum = 12 or Econum = 14 or Econum = 15 or Econum = 16 or Econum = 17 or Econum = 18 or Econum = 19 or Econum = 23 or Econum = 24 or Econum = 25 or Econum = 26 or Econum = 27 or Econum = 28,,,
+1,NWBOR,ECOGRP,1,ConLow,"ECONUM IN (126,127,128,129,134,135,136,137,222,223,224)",,,Econum = 126 or Econum = 127 or Econum = 128 or Econum = 129 or Econum = 134 or Econum = 135 or Econum = 136 or Econum = 137 or Econum = 222 or Econum = 223 or Econum = 224
+2,NWBOR,ECOGRP,2,HwdLow,"ECONUM IN (130,131,132,133)",,,Econum = 130 or Econum = 131 or Econum = 132 or Econum = 133
+3,NWBOR,ECOGRP,3,UplCe,"ECONUM IN (13,36,51,66,84,100,115)",,,Econum = 13 or Econum = 36 or Econum = 51 or Econum = 66 or Econum = 84 or Econum = 100 or Econum = 115
+4,NWBOR,ECOGRP,4,ShalES,"ECONUM IN (11,12,14,15,16,17,18,19,23,24,25,26,27,28)",,,Econum = 11 or Econum = 12 or Econum = 14 or Econum = 15 or Econum = 16 or Econum = 17 or Econum = 18 or Econum = 19 or Econum = 23 or Econum = 24 or Econum = 25 or Econum = 26 or Econum = 27 or Econum = 28
 5,NWBOR,ECOGRP,5,NA,EcoNum>0,,,
 6,NWBOR,SFU,1,PWDOM,(Pw>=40),,,
 7,NWBOR,SFU,2,PRDOM,(Pr >= 70),,,
@@ -145,7 +145,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 301,NEBOR,ECOGRP,2,HwdLow,"ECONUM IN (70,71,119,120,130,131)",,,Econum = 70 or Econum = 71 or Econum = 119 or Econum = 120 or Econum = 130 or Econum = 131
 302,NEBOR,ECOGRP,3,PineES,"ECONUM IN (12,34,35,49,50)",,,Econum = 12 or Econum = 34 or Econum = 49 or Econum = 35 or Econum = 50
 303,NEBOR,ECOGRP,4,ShalES,"ECONUM IN (11,12,14,15,16,17,18,19,23,24,25,26,27,28)",,,Econum = 11 or Econum = 12 or Econum = 14 or Econum = 15 or Econum = 16 or Econum = 17 or Econum = 18 or Econum = 19 or Econum = 23 or Econum = 24 or Econum = 25 or Econum = 26 or Econum = 27 or Econum = 28
-304,NEBOR,ECOGRP,5,NA,EcoNum>0,,,
+304,NEBOR,ECOGRP,5,NA,EcoNum>0,,,Careful when using 'NA'. some scripts automatically change this to 'nan'
 310,NEBOR,SFU,1,PR1,PR>=70,"Red Pine, Plantations",Confirmed,same as v9 ROD2023
 ,NEBOR,SFU,2,PW1,(PW+PR+HE+SW >= 40 AND PW>=30),"White Pine, Shelterwood",Added and confirmed,removed SX from v9_ROD2023
 311,NEBOR,SFU,3,PRW,(PW+PR+SW+HE>= 40 AND PW+PR>= 30),Red and White Pine,Confirmed,"following v9_ROD2023, but removed SX"
@@ -186,7 +186,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 369,NEBOR,LGFU,20,MW1,(PJ+PR>=20) AND (EcoGrp='NA'),,,
 370,NEBOR,LGFU,21,MW1,(BF<=20) AND (SW<=20) AND (CE<=20) AND (EcoGrp='NA'),,,
 371,NEBOR,LGFU,22,MW2,(PT+PL+BW+YB+MR+UH+MH+LH>=50),,,
-372,NEBOR,LGFU,23,MW2,Stkg>=0,,,
+372,NEBOR,LGFU,23,MW2,POLYTYPE='FOR',,,
 400,NEBOR,LGDS,1,P,LGFU='PW1' AND AGE>=0 AND AGE<15,,,
 401,NEBOR,LGDS,2,P,LGFU='PR1' AND AGE>0 AND AGE<15,,,
 402,NEBOR,LGDS,3,P,LGFU='PRW' AND AGE>=0 AND AGE<15,,,
