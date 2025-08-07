@@ -1,6 +1,5 @@
-# this is a template to build arcpy tools
-# using this conveniently lets you create log txt file at the end of the script.
-# this script should be on one folder level deeper than scripts folder. for example, "scripts/new_folder/this_script.py"  If this is not the case, the logger won't work.
+# Just started working on this...
+# before writing this code, I first need to have a clean inventory with standard fields populated.
 
 
 import arcpy
@@ -43,25 +42,23 @@ def chc(inputfc):
 	num_selected = int(arcpy.management.GetCount("temp_lyr")[0])
 	arcpy.management.CalculateField("temp_lyr", fieldName, expression, code_block=code_block)
 
-	# copy fc and rename
-	arcpy.CopyFeatures_management(in_features=ARI_template,out_feature_class=new_fc_name)
-
-	# replace existing DS
-	arcpy.Delete_management(os.path.join(output_gdb,dsG)) # this will be ignored if the DS doesn't already exist.
-	arcpy.CreateFeatureDataset_management(output_gdb, dsG, projfile)
-
-	# append - will find and append only those fields that has the same fieldname - be careful of the field length difference
-	app_out = arcpy.management.Append(inputs=last_mu_list[index], target=new_fc_name, schema_type="NO_TEST")
-	append_count = int(app_out.getOutput("appended_row_count"))
 
 if __name__ == '__main__':
 	
 	# gather inputs
-	inputfc = arcpy.GetParameterAsText(0)
+	inputARAR = arcpy.GetParameterAsText(0) # path to existing AnalysisReadyAR database
+	year_now = 2025 # used to re-calculate age
+	AR_select_sql = {
+	'HRV': "AR_YEAR >= 2010",
+	'RGN': "AR_YEAR >= 2015",
+	'EST': "AR_YEAR >= 2020"
+	} # 
+	ht_per_year = 0.3
+
 
 	######### logfile stuff
 
-	tool_shortname = 'CaribouHab' # the output logfile will include this text in its filename.
+	tool_shortname = 'ARAR2INV' # the output logfile will include this text in its filename.
 
 	# importing libraries (only works if arclog.py file is located on the parent folder of this script)
 	from datetime import datetime
