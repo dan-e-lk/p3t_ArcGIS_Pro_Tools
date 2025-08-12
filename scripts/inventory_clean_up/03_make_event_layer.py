@@ -1,5 +1,38 @@
-# Just started working on this...
-# before writing this code, I first need to have a clean inventory with standard fields populated.
+# Make event layer out of NatDist_MT_LatestOnly and Analysis-Ready AR
+
+# NatDist event layer:
+
+prefix = 'NEO_'
+neofields = {
+	# fieldname | field type | length 		
+	'YRSOURCE':	['SHORT'],
+	'SOURCE':	['TEXT',	16],
+	'YRDEP':	['SHORT'],
+	'DEPTYPE':	['TEXT',	16],
+	'DEVSTAGE':	['TEXT',	16],
+	'STKG':		['FLOAT'],
+	'YRORG':	['SHORT'],
+	'AGE':		['SHORT'],
+	'HT':		['FLOAT'],
+	'CCLO':		['SHORT'],
+	'SILVSYS':	['TEXT',	4],
+	'SPCOMP':	['TEXT',	120],
+	'PLANFU':	['TEXT',	30],
+	'YIELD':	['TEXT',	20],
+	'SGR':		['TEXT',	50],
+	'LEADSPC':	['TEXT',	3],
+}
+
+# only used for nat dist to select and calculate field for NEO_DEPTYPE field
+sql_deptype = {
+	'BLOWDOWN': " NATDID = 'BLDN' ",
+	'DISEASE':	" SOURCE = 'Disease' ",
+	'DROUGHT': " NATDID = 'DROT' ",
+	'FIRE': " SOURCE = 'FIRE' ",
+	'FLOOD': " NATDID = 'FLOD' ",
+	'ICE': " NATDID = 'ICED' ",
+	'INSECTS': " SOURCE in ('Budworm','FTCT','OthPest') ",
+	'SNOW': " NATDID = 'SNOW' "}
 
 
 import arcpy
@@ -7,8 +40,11 @@ import os, csv
 import pandas as pd
 
 arcpy.env.overwriteOutput = True
+arcpy.env.XYTolerance = "0.01 Meters" # by default, it is 0.001 meters, which can generate 1mm-wide overlaps and gaps. So 0.01m is preferred.
+projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj") # this works for all scripts that are one folder level deep. eg. scripts/sqlite/script.py
 
-def chc(inputfc):
+
+def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, year_now, ht_per_year):
 	
 	# loading csv to list of dictionary
 	tbl_chc = 'habitat_classification.csv'
@@ -46,19 +82,27 @@ def chc(inputfc):
 if __name__ == '__main__':
 	
 	# gather inputs
-	inputARAR = arcpy.GetParameterAsText(0) # path to existing AnalysisReadyAR database
-	year_now = 2025 # used to re-calculate age
-	AR_select_sql = {
-	'HRV': "AR_YEAR >= 2010",
-	'RGN': "AR_YEAR >= 2015",
-	'EST': "AR_YEAR >= 2020"
+	in_arar_gdb = r''
+	in_natdist_gdb = r''
+	out_event_gdb = r''
+	time_range = {
+	'HRV': "AR_YEAR >= 2015",
+	'RGN': "AR_YEAR >= 2010", # only affects devstage. without RGN, we can't figure out if devstage is ESTNAT or ESTPLANT
+	'EST': "AR_YEAR >= 2020",
+	'NATDIST': "YEAR >= 2020",
 	} # 
-	ht_per_year = 0.3
+	year_now = 2025 # used to re-calculate age
+	para = {
+	'ht_per_year': 0.3,
+	'simplify_meters': 2,
+	'eliminate_sqm': 500,
+	}
+	step_list = ['AR1']
 
 
 	######### logfile stuff
 
-	tool_shortname = 'ARAR2INV' # the output logfile will include this text in its filename.
+	tool_shortname = 'Make_Event_Layer' # the output logfile will include this text in its filename.
 
 	# importing libraries (only works if arclog.py file is located on the parent folder of this script)
 	from datetime import datetime
@@ -79,7 +123,7 @@ if __name__ == '__main__':
 	##########
 
 	# run the main function(s)
-	chc(inputfc)
+	make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, year_now, ht_per_year)
 
 	# finish writing the logfile
 	logger.log_close()

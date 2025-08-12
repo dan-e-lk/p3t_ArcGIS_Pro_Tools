@@ -8,6 +8,8 @@ import os, csv
 import pandas as pd
 
 arcpy.env.overwriteOutput = True
+arcpy.env.XYTolerance = "0.01 Meters" # by default, it is 0.001 meters, which can generate 1mm-wide overlaps and gaps. So 0.01m is preferred.
+projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj") # this works for all scripts that are one folder level deep. eg. scripts/sqlite/script.py
 
 def chc(inputfc):
 	

@@ -128,6 +128,7 @@ def clean_inv(original_inv_gdb,output_gdb,boundary_fc,para,mu_list,step_list):
 
 			logger.print2("\tDone!!")
 			# delete identical (keeping the first record only)
+			# In the future - we could run "sort" by YRSOURCE first, then run delete identical
 			logger.print2("Running Delete Identical tool")
 			arcpy.management.DeleteIdentical(in_dataset=new_fc_name,fields="Shape")
 			logger.print2("\tDone!!")

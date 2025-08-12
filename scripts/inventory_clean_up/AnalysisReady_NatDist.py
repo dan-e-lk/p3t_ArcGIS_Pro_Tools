@@ -1,3 +1,4 @@
+# you can run this any time when you have NatDist.gdb. You don't have to run other clean-up tools before you run this one.
 # this script merges all nat dist polygons into one and creates a new fc called 'NatDist_All' - aka analysis-ready NatDist
 
 # Natural Disturbance roll-up has a number of polygon feature classes and they share common fields:
@@ -13,6 +14,7 @@ import arcpy
 import os
 
 arcpy.env.overwriteOutput = True
+arcpy.env.XYTolerance = "0.01 Meters"
 projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj")
 
 def analysis_ready_NatDist(input_gdb,step_list):
@@ -21,7 +23,7 @@ def analysis_ready_NatDist(input_gdb,step_list):
 	new_ds_full = os.path.join(input_gdb,new_ds)
 	append_base_full = os.path.join(input_gdb,orig_ds,append_base)
 	append_lst = [os.path.join(input_gdb,orig_ds,i) for i in to_be_appended]
-	new_fc = 'NatDist_All'
+	new_fc = 'NatDist_AllPoly'
 	new_fc_full = os.path.join(new_ds_full,new_fc)
 
 
@@ -87,23 +89,87 @@ def analysis_ready_NatDist(input_gdb,step_list):
 
 
 	if 'B' in step_list:
-		logger.print2("\n\n#########     B. Latest Mortality-level Only    ##########\n")
+		logger.print2("\n\n#########     B. Latest Mortality-level Only     ##########\n")
 		
+		dsTemp = 'Temp'
+		dsTemp_full = os.path.join(input_gdb,dsTemp)
+
+		# work on temporary dataset
+		logger.print2("\nGenerating a new dataset: %s"%dsTemp)
+		arcpy.Delete_management(dsTemp_full)
+		arcpy.CreateFeatureDataset_management(input_gdb, dsTemp, projfile)
+
+		# select where DAMAGE = 'MT' and copy over
+		expr = "DAMAGE = 'MT'"
+		temp01 = os.path.join(dsTemp_full,'t1_MT')
+		logger.print2("\tSelecting where %s and copying over to the Temp dataset"%expr)
+		arcpy.conversion.ExportFeatures(new_fc_full, temp01, expr) # arcgis pro 3.3 and above
+
+		# self-intersect
+		logger.print2("\tSelf-intersecting %s"%os.path.split(temp01)[1])
+		temp02 = os.path.join(dsTemp_full,'t2_intersect')
+		arcpy.analysis.Intersect(in_features=[temp01],out_feature_class=temp02,join_attributes="ALL",cluster_tolerance=None,output_type="INPUT")
+
+		# sort and delete identical
+		logger.print2("\tSorting %s by Year (descending)"%os.path.split(temp02)[1])
+		temp03 = os.path.join(dsTemp_full,'t3_sort_n_deleteIdentical')
+		arcpy.management.Sort(in_dataset=temp02,out_dataset=temp03,sort_field="Year DESCENDING")
+
+		logger.print2("\tDeleting Identical Shapes on %s"%os.path.split(temp03)[1])
+		arcpy.management.DeleteIdentical(in_dataset=temp03,fields="Shape",xy_tolerance=None,z_tolerance=0)
+
+		# erase temp03 from temp01
+		temp04 = os.path.join(dsTemp_full,'t4_replace')
+		logger.print2("\tErasing %s from %s"%(os.path.split(temp03)[1], os.path.split(temp01)[1]))
+		arcpy.analysis.PairwiseErase(in_features=temp01,erase_features=temp03,out_feature_class=temp04)
+
+		# append temp03 to temp04
+		logger.print2("\tAppending %s to %s"%(os.path.split(temp03)[1], os.path.split(temp04)[1]))
+		app_out = arcpy.management.Append(inputs=temp03, target=temp04, schema_type="NO_TEST")
+		append_count = int(app_out.getOutput("appended_row_count"))
+		logger.print2("\t\tAppended %s records"%append_count)
+
+		# dissolve
+		logger.print2("\tDissolving %s"%os.path.split(temp04)[1])
+		temp05 = os.path.join(dsTemp_full,'t5_dislv')
+		arcpy.management.Dissolve(in_features=temp04,out_feature_class=temp05,dissolve_field="Damage;SOURCE;NatDID;Year",multi_part="SINGLE_PART")		
+
+		# eliminate - final step, so create a new dataset
 		dsB = 'MT_flat_latest'
 		dsB_full = os.path.join(input_gdb,dsB)
-		
-
+		min_area = 5000 #m2
 		logger.print2("\nGenerating a new dataset: %s"%dsB)
 		arcpy.Delete_management(dsB_full)
 		arcpy.CreateFeatureDataset_management(input_gdb, dsB, projfile)
+
+		out_fc = os.path.join(dsB_full,"NatDist_MT_LatestOnly")
+		logger.print2("\tRunning Eliminate (<%sm2)"%min_area)
+		orig_count = int(arcpy.GetCount_management(temp05)[0])
+		arcpy.MakeFeatureLayer_management(temp05, "elimlayer1")
+		arcpy.SelectLayerByAttribute_management("elimlayer1", "NEW_SELECTION","SHAPE_AREA < %s"%min_area)
+		arcpy.management.Eliminate(in_features="elimlayer1",out_feature_class=out_fc,selection="LENGTH")
+		new_count = int(arcpy.GetCount_management(out_fc)[0])
+		elim_percent = round((((orig_count - new_count) / orig_count) * 100),2)
+		logger.print2("\t\tEliminated %s of %s (%s%%)"%(orig_count - new_count,orig_count,elim_percent))
+		logger.print2("\tDone!!")
+
+
+
+		# If not debug - delete the temporarly workspace
+		logger.print2("\n\nCleaning up temporary dataset...")
+		arcpy.Delete_management(dsTemp_full)
+		logger.print2("\tDone!!")
+
+
 
 
 
 if __name__ == '__main__':
 	
 	# gather inputs
-	input_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\E\Natural_Disturbance\NatDist.gdb'
-	step_list = ['A','B'] #
+	input_gdb = arcpy.GetParameterAsText(0)
+	step_list = ['A','B'] # 
+	# step_list = ['B']
 
 	######### logfile stuff
 
