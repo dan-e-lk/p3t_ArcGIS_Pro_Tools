@@ -1,3 +1,4 @@
+# !!! NEED TO ADD SGR FLAT !!! All you need to do is to add a script and copy over SGR_Flat from AR_Master to ARAR.gdb
 intro = """
 version 1.0
 AR_Master has many separate components. This script merges same type of activies together into one feature class. 

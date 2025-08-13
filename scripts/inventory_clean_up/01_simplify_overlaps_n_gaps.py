@@ -63,6 +63,7 @@ def clean_inv(original_inv_gdb,output_gdb,boundary_fc,para,mu_list,step_list):
 	stepF_fcs = {mu:"%s_%s"%(mu,dsF) for mu in mu_list}
 
 	# Part A
+	arcpy.env.workspace = original_inv_gdb
 	if 'A' in step_list:
 		logger.print2("\n\n#########     A. Multipart to Single Part     ##########\n")
 		logger.print2("Making a new Feature dataset: %s"%dsA)
@@ -97,7 +98,7 @@ def clean_inv(original_inv_gdb,output_gdb,boundary_fc,para,mu_list,step_list):
 				out_feature_class=new_fc_name,
 				algorithm="POINT_REMOVE",
 				tolerance=simp_tol,
-				error_option="RESOLVE_ERRORS",
+				error_option="RESOLVE_ERRORS", # error_option="NO_CHECK" is faster and should still be okay as long as repair geometry later
 				collapsed_point_option="NO_KEEP")
 			# delete unwanted fields created by simplify polygon tool
 			logger.print2("\tDeleting unwanted fields created by simplify polygon tool")
@@ -239,18 +240,18 @@ if __name__ == '__main__':
 	# gather inputs
 	# inputfc = arcpy.GetParameterAsText(0)
 	
-	# original_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\D\GeoData\PIAMMar2024.gdb'# eg. PIAM (this tool doesn't alter this input)
-	original_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\latest_inv\latest_OPI.gdb'# eg. PIAM (this tool doesn't alter this input)
+	original_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\D\GeoData\PIAMMar2024.gdb'# eg. PIAM (this tool doesn't alter this input)
+	# original_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\latest_inv\latest_OPI.gdb'# eg. PIAM (this tool doesn't alter this input)
 	# the feature class names in the original_inv_gdb must be in the format of 'FC930' or 'Park_Quetico' - to match the INV_NAME values in boundary_fc.
 	
-	# output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\InvCleaner01_test.gdb' # must already exist - will be overwritten
-	output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\latest_inv\latest_OPI.gdb' # must already exist - will be overwritten
+	output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\InvCleaner01_fin.gdb' # must already exist - will be overwritten
+	# output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\latest_inv\latest_OPI.gdb' # must already exist - will be overwritten
 	
 	boundary_fc = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\D\GeoData\PIAMMar2024.gdb\FMU_FN_PARK_Boundary_Simp2m' # Only used in Part F. FMU, FN, Park boundary layer. Should have INV_NAME field
 	
 	para = {
 	'simp_tolerance': '2 Meters',
-	'elim_select': "SHAPE_AREA < 500 OR (POLYTYPE='FOR' AND SHAPE_AREA < 1000)"
+	'elim_select': "SHAPE_AREA < 100 OR (POLYTYPE='FOR' AND SHAPE_AREA < 400)" # is this good enough? would it eliminate things that it shouldn't? May be include exclusion?
 	}
 	mu_list = ['FC110','FC490','FC702','FC930'] # this must be identical to the feature class names within PIAM.gdb (upper/lower case doesn't matter)
 	# mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
@@ -261,6 +262,14 @@ if __name__ == '__main__':
 	# 		'FarNorth_NorthCentral', 'FarNorth_Northeast', 'FarNorth_Northwest', 'FarNorth_Taash',
 	# 		'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
 	# 		'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa'] # takes about 5-6 hours to run
+	mu_list = ['FC035', 'FC060', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
+			'FC230', 'FC280', 'FC350', 'FC360', 'FC390', 'FC406', 'FC415', 'FC421', 'FC438', 'FC443',
+			'FC451', 'FC535', 'FC574', 'FC601', 'FC615', 'FC644', 'FC680', 'FC754',
+			'FC780', 'FC796', 'FC816', 'FC840', 'FC889', 'FC898', 'FC966', 'FC994',
+			'FarNorth_BerensRiver', 'FarNorth_CatLake', 'FarNorth_ConstanceL', 'FarNorth_MooseCree',
+			'FarNorth_NorthCentral', 'FarNorth_Northeast', 'FarNorth_Northwest', 'FarNorth_Taash',
+			'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
+			'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa'] # takes about 5 hours to run
 
 	step_list = ['A','B','C','D','E','F'] # Unless you are debugging the tool, all the steps should be run. 
 	# step_list = ['F'] # Unless you are debugging the tool, all the steps should be run. 

@@ -142,7 +142,7 @@ def analysis_ready_NatDist(input_gdb,step_list):
 		arcpy.Delete_management(dsB_full)
 		arcpy.CreateFeatureDataset_management(input_gdb, dsB, projfile)
 
-		out_fc = os.path.join(dsB_full,"NatDist_MT_LatestOnly")
+		out_fc = os.path.join(dsB_full,"NatDist_MT_LatestOnly") # if you change this fc name, then you must also edit 03_make_event_layer.py
 		logger.print2("\tRunning Eliminate (<%sm2)"%min_area)
 		orig_count = int(arcpy.GetCount_management(temp05)[0])
 		arcpy.MakeFeatureLayer_management(temp05, "elimlayer1")
