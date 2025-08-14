@@ -312,13 +312,79 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 								devstage = 'SELECT'
 							if row[f.index('SILVSYS')] == 'SH':
 								mgmtstg = row[f.index('MGMTSTG')] # most likely SEEDCUT, LASTCUT, FIRSTCUT...
-								if mgmtstg != None and len(mgmtstg) > 3: # it could be blank, null or '-', in which case it's just 'DEPHARV'
+								if mgmtstg != None and len(mgmtstg) > 3: # it could be blank, null or '-', in which case it's just the default 'DEPHARV'
 									devstage = mgmtstg
-						if lyrtype == 'EST': 
-
+						if lyrtype == 'EST':
+							# DEVSTAGE should be either ESTNAT, ESTSEED or ESTPLANT, but just based on EST layer, we don't know which one. Will just put EST but if it overlaps with RGN we can figure this out
+							devstage = 'EST'
 						if lyrtype == 'RGN':
+							devstage = 'NEWNAT' # by default
+							trtmthd = row[f.index('TRTMTHD1')] # should be one of ['CLAAG','HARP','NATURAL','PLANT','SCARIFY','SEED','SEEDCUT','SEEDSIP','SEEDTREE','STRIPCUT']
+							if trtmthd != None: trtmthd = trtmthd.upper()
+							if trtmthd in ['CLAAG','HARP','NATURAL','SCARIFY','STRIPCUT']: devstage = 'NEWNAT'
+							if trtmthd in ['PLANT']: devstage = 'NEWPLANT'
+							if trtmthd in ['SEED','SEEDSIP']: devstage = 'NEWSEED'
+							if trtmthd in ['SEEDCUT','SEEDTREE']: devstage = trtmthd # these are types of natural regen but has their place in DEVSTAGE
 
 						row[f.index('%s_DEVSTAGE'%lyrtype)]  = devstage
+						cursor.updateRow(row)
+
+			# SPCOMP, PLANFU, LEADSPC, YIELD - we only get this from EST
+			if lyrtype in ['EST']:
+				logger.print2("\tPopulating SPCOMP, PLANFU, LEADSPC and YIELD")		
+				with arcpy.da.UpdateCursor(outAR2, f) as cursor:
+					for row in cursor:
+						spcomp = row[f.index('SPCOMP')]
+						if spcomp != None and len(spcomp) > 5:
+							spcomp = spcomp.upper()
+							row[f.index('%s_SPCOMP'%lyrtype)]  = spcomp
+							row[f.index('%s_LEADSPC'%lyrtype)]  = spcomp[:3].strip()
+						row[f.index('%s_PLANFU'%lyrtype)]  = row[f.index('ESTFU')]
+						row[f.index('%s_YIELD'%lyrtype)]  = row[f.index('ESTYIELD')]
+						cursor.updateRow(row)
+
+			# SGR
+			if lyrtype in ['HRV','EST','SGR']:
+				logger.print2("\tPopulating SGR")		
+				with arcpy.da.UpdateCursor(outAR2, f) as cursor:
+					for row in cursor:
+						row[f.index('%s_SGR'%lyrtype)] = row[f.index('SGR')]
+						cursor.updateRow(row)
+
+			# STKG, YRORG, AGE, CCLO, HT - doing these together because of the interdependency
+			if lyrtype in ['HRV','EST']:
+				logger.print2("\tPopulating STKG, YRORG, AGE, CCLO, and HT")		
+				with arcpy.da.UpdateCursor(outAR2, f) as cursor:
+					for row in cursor:
+						stkg,yrorg,age,cclo,ht = None,None,None,None,None # default
+						silvsys = row[f.index('SILVSYS')]
+						ar_year = row[f.index('AR_YEAR')]
+						if lyrtype == 'HRV':
+							stkg = 0.1 if silvsys == 'CC' else None
+							mgmtstg = row[f.index('MGMTSTG')]
+							if silvsys == 'CC' or mgmtstg == 'LASTCUT': # if it's clearcut or lastcut, then yrdep = yrorg
+								yrorg = ar_year
+							if yrorg != None:
+								age = year_now - yrorg
+							if silvsys == 'CC':
+								cclo = 1 # !!!! some may disagree with this, but I think it's better to have cclo = 1 than 80 when it's right after clearcut
+							if age != None:
+								ht = age * ht_per_year # age times 0.3
+						if lyrtype == 'EST':
+							stkg = row[f.index('STKG')]
+							yrorg = row[f.index('YRDEP')]
+							ageest = row[f.index('AGEEST')]
+							age = ageest + (year_now - ar_year) # add the difference between today's year and AR year
+							if silvsys == 'CC':
+								cclo = 11 # !!!! some may disagree with this, but I think it's better to have cclo = 11 than 80 when it's only few years after clearcut
+							ht = row[f.index('HT')]
+							ht = ht + (age-ageest)*ht_per_year
+
+						row[f.index('%s_STKG'%lyrtype)]  = stkg
+						row[f.index('%s_YRORG'%lyrtype)]  = yrorg
+						row[f.index('%s_AGE'%lyrtype)]  = age
+						row[f.index('%s_CCLO'%lyrtype)]  = cclo
+						row[f.index('%s_HT'%lyrtype)]  = ht
 						cursor.updateRow(row)
 
 
