@@ -56,6 +56,7 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 
 	# these are the layers from in_arar_gdb that will be used to build event layer
 	orig_ar_layers = {'HRV':'HRV_All_02_n_up','EST':'EST_Y_02_n_up','RGN':'Regen_All_02_n_up','SGR':'SGR_Flat'}
+	# orig_ar_layers = {'EST':'EST_Y_02_n_up','RGN':'Regen_All_02_n_up','SGR':'SGR_Flat'}
 	# this layer should be found in in_natdist_gdb
 	orig_natdist_layer = 'NatDist_MT_LatestOnly'
 	logger.print2("Time Range Used:\n%s"%time_range)
@@ -69,6 +70,8 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 	dsAR1 = 'AR1' # name of the dataset generated/deleted
 	dsNAT1 = 'NAT1'
 	dsAR2 = 'AR2'
+	dsAR3 = 'AR3'
+	dsAR4 = 'AR4'
 
 
 	if 'AR1' in step_list:
@@ -286,7 +289,10 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 				logger.print2("\tPopulating SILVSYS")		
 				with arcpy.da.UpdateCursor(outAR2, f) as cursor:
 					for row in cursor:
-						row[f.index('%s_SILVSYS'%lyrtype)]  = row[f.index('SILVSYS')]
+						silvsys = row[f.index('SILVSYS')]
+						if silvsys not in ['CC','SH','SE']:
+							silvsys = None
+						row[f.index('%s_SILVSYS'%lyrtype)]  = silvsys
 						cursor.updateRow(row)
 
 			# DEPTYPE
@@ -297,7 +303,7 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 						if lyrtype == 'HRV': deptype = 'HARVEST'
 						if lyrtype == 'EST': 
 							ardstgrp = 	row[f.index('ARDSTGRP')]
-							deptype = 'HARVEST' if ardstgrp == 'HRV' else 'UNKNOWN' # if ardstgrp is NAT, leave this UNKNOWN because we will likely get it from NatDist
+							deptype = 'HARVEST' if ardstgrp in ['HARV','HRV','HARVEST'] else 'UNKNOWN' # if ardstgrp is NAT, leave this UNKNOWN because we will likely get it from NatDist
 						row[f.index('%s_DEPTYPE'%lyrtype)]  = deptype
 						cursor.updateRow(row)
 
@@ -334,13 +340,17 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 				logger.print2("\tPopulating SPCOMP, PLANFU, LEADSPC and YIELD")		
 				with arcpy.da.UpdateCursor(outAR2, f) as cursor:
 					for row in cursor:
-						spcomp = row[f.index('SPCOMP')]
+						spcomp, planfu, leadspc, ar_yield = row[f.index('SPCOMP')], row[f.index('ESTFU')], None, row[f.index('ESTYIELD')]
 						if spcomp != None and len(spcomp) > 5:
 							spcomp = spcomp.upper()
-							row[f.index('%s_SPCOMP'%lyrtype)]  = spcomp
-							row[f.index('%s_LEADSPC'%lyrtype)]  = spcomp[:3].strip()
-						row[f.index('%s_PLANFU'%lyrtype)]  = row[f.index('ESTFU')]
-						row[f.index('%s_YIELD'%lyrtype)]  = row[f.index('ESTYIELD')]
+							leadspc  = spcomp[:3].strip()
+						if planfu == None or len(planfu) < 2: planfu = None
+						if ar_yield == None or ar_yield.strip() in ['-','']: ar_yield = None
+
+						row[f.index('%s_SPCOMP'%lyrtype)]  = spcomp
+						row[f.index('%s_PLANFU'%lyrtype)]  = planfu
+						row[f.index('%s_LEADSPC'%lyrtype)] = leadspc
+						row[f.index('%s_YIELD'%lyrtype)]  = ar_yield
 						cursor.updateRow(row)
 
 			# SGR
@@ -348,7 +358,12 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 				logger.print2("\tPopulating SGR")		
 				with arcpy.da.UpdateCursor(outAR2, f) as cursor:
 					for row in cursor:
-						row[f.index('%s_SGR'%lyrtype)] = row[f.index('SGR')]
+						sgr = row[f.index('SGR')]
+						if sgr == None or sgr.strip() in ['-','']:
+							sgr = None
+						else:
+							sgr = sgr.strip().upper()
+						row[f.index('%s_SGR'%lyrtype)] = sgr
 						cursor.updateRow(row)
 
 			# STKG, YRORG, AGE, CCLO, HT - doing these together because of the interdependency
@@ -372,13 +387,19 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 								ht = age * ht_per_year # age times 0.3
 						if lyrtype == 'EST':
 							stkg = row[f.index('STKG')]
-							yrorg = row[f.index('YRDEP')]
-							ageest = row[f.index('AGEEST')]
+							yrdep = row[f.index('YRDEP')] # some YRDEP is ridiculously old - eg. 1865
+							ar_ht = row[f.index('HT')]							
+							ageest = row[f.index('AGEEST')] # sometimes ageest is None
+							if yrdep == None or yrdep < 1900: # if YRDEP doesn't make sense, deduce it from HT
+								ageest = ar_ht/ht_per_year # if height is 9m, deduced ageest is 30years using 0.3m/year ht_per_year
+								yrdep = ar_year - ageest
+							yrorg = yrdep
+							if ageest == None or ageest < 1: # if ageest is unknown, we calculate this
+								ageest = ar_year - yrorg
 							age = ageest + (year_now - ar_year) # add the difference between today's year and AR year
-							if silvsys == 'CC':
-								cclo = 11 # !!!! some may disagree with this, but I think it's better to have cclo = 11 than 80 when it's only few years after clearcut
-							ht = row[f.index('HT')]
-							ht = ht + (age-ageest)*ht_per_year
+							# if silvsys == 'CC':
+							# 	cclo = 11 
+							ht = ar_ht + (age-ageest)*ht_per_year
 
 						row[f.index('%s_STKG'%lyrtype)]  = stkg
 						row[f.index('%s_YRORG'%lyrtype)]  = yrorg
@@ -387,6 +408,59 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 						row[f.index('%s_HT'%lyrtype)]  = ht
 						cursor.updateRow(row)
 
+			# YRDEP shouldn't be older than YRORG
+			if lyrtype in ['EST']:
+				logger.print2("\tReviewing YRDEP (YRDEP shouldn't be older than YRORG)")		
+				with arcpy.da.UpdateCursor(outAR2, f) as cursor:
+					for row in cursor:
+						yrdep = row[f.index('%s_YRDEP'%lyrtype)]
+						yrorg = row[f.index('%s_YRORG'%lyrtype)]
+						if yrdep < yrorg:
+							row[f.index('%s_YRDEP'%lyrtype)] = yrorg
+							cursor.updateRow(row)
+
+
+
+	if 'AR3' in step_list:
+		# Simple but time consuming. union all 4 AR layers, and delete / add fields
+		logger.print2("\n\n#########    AR3  Union All AR data   ##########\n")
+
+		# output data from AR2-1
+		dsAR2_full = os.path.join(out_event_gdb, dsAR2)
+		AR2_fcs_full = [os.path.join(out_event_gdb, dsAR2,"%s_%s"%(lyrtype,dsAR2)) for lyrtype in orig_ar_layers.keys()] # list of all fcs from AR2-1
+
+		logger.print2("Making a new Feature dataset: %s"%dsAR3)
+		dest_fd = os.path.join(out_event_gdb, dsAR3)
+		arcpy.Delete_management(dest_fd)
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsAR3, projfile)
+		dest_fc = os.path.join(dest_fd,"%s_Union"%dsAR3)
+
+		logger.print2("\nUnioning all AR data (takes about 5-10mins)")
+		arcpy.analysis.Union(in_features=AR2_fcs_full,out_feature_class=dest_fc,join_attributes="ALL",cluster_tolerance=None,gaps="GAPS")
+		logger.print2("\tDone!")
+
+
+	if 'AR4' in step_list:
+		# delete fields, add AR_ inventory fields (eg. AR_YRSOURCE), populate those fields with the latest and greatest info
+		logger.print2("\n\n#########    AR4 Populate with the latest AR values   ##########\n")
+		
+		last_fc = os.path.join(out_event_gdb, dsAR3, "%s_Union"%dsAR3)
+
+		logger.print2("Making a new Feature dataset: %s"%dsAR4)
+		dest_fd = os.path.join(out_event_gdb, dsAR4)
+		arcpy.Delete_management(dest_fd)
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsAR4, projfile)
+		dest_fc = os.path.join(dest_fd,"%s"%dsAR4)
+
+		# copy the AR3 union data over
+		arcpy.CopyFeatures_management(in_features=last_fc,out_feature_class=dest_fc)
+
+
+
+
+
+
+	# do multi to single, dissolve, eliminate.
 
 
 
@@ -442,8 +516,10 @@ if __name__ == '__main__':
 	'simplify_meters': 2,
 	'eliminate_sqm': 500,
 	}
-	step_list = ['AR1','NAT1','AR2']
-	step_list = ['AR2-1']
+	# step_list: previous step is needed before running the step that comes after. However, if your AR2 fails, you can fix the bug and run it again start AR2.
+	# for example, AR2-1 can run on its own if you've previously completed AR1 and AR2
+	step_list = ['AR1','NAT1','AR2','AR2-1','AR3','AR4']
+	step_list = ['AR4']
 
 
 	######### logfile stuff
