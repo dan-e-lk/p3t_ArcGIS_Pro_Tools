@@ -10,7 +10,6 @@
 # what is event layer: it is the layer used to update out-of-date inventory data. 
 #	For example, using new HRV layer, we can update YRSOURCE, YRDEP, DEVSTAGE and etc.
 #	all the fields that can be potentially updated based on the latest AR or NatDist data are listed in neofields:
-prefix = 'NEO_'
 neofields = {
 	# fieldname | field type | length 		
 	'YRSOURCE':	['SHORT'],
@@ -31,16 +30,8 @@ neofields = {
 	'LEADSPC':	['TEXT',	3],
 }
 
-# only used for nat dist to select and calculate field for NEO_DEPTYPE field
-sql_deptype = {
-	'BLOWDOWN': " NATDID = 'BLDN' ",
-	'DISEASE':	" SOURCE = 'Disease' ",
-	'DROUGHT': " NATDID = 'DROT' ",
-	'FIRE': " SOURCE = 'FIRE' ",
-	'FLOOD': " NATDID = 'FLOD' ",
-	'ICE': " NATDID = 'ICED' ",
-	'INSECTS': " SOURCE in ('Budworm','FTCT','OthPest') ",
-	'SNOW': " NATDID = 'SNOW' "}
+# the following fields are not updated by nat dist layer
+fields_to_exclude = ['SILVSYS','SPCOMP','PLANFU','YIELD','SGR','LEADSPC']
 
 
 import arcpy
@@ -67,12 +58,105 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 	eliminate_sqm = para['eliminate_sqm']
 
 	# common variables
-	dsAR1 = 'AR1' # name of the dataset generated/deleted
-	dsNAT1 = 'NAT1'
-	dsAR2 = 'AR2'
-	dsAR3 = 'AR3'
-	dsAR4 = 'AR4'
-	dsAR5 = 'AR5'
+	dsAR1,dsAR2,dsAR3,dsAR4,dsAR5,dsAR6 = 'AR1','AR2','AR3','AR4','AR5','AR6'
+	dsNAT1,dsNAT2,dsNAT3 = 'NAT1','NAT2','NAT3'
+
+	if 'NAT1' in step_list:
+		# this one is easy. Just need to select and copy over to the new dataset because it's already flat
+		arcpy.env.workspace = in_natdist_gdb
+		natdist_fc_name = 'NatDist_MT_LatestOnly'
+
+		logger.print2("\n\n#########   NAT1. Select and Copy NatDist_MT_LatestOnly  ##########\n")
+		logger.print2("Making a new Feature dataset: %s"%dsNAT1)
+		arcpy.Delete_management(os.path.join(out_event_gdb,dsNAT1))
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsNAT1, projfile)
+		dest_fd = os.path.join(out_event_gdb, dsNAT1)
+
+		# select
+		select_sql = time_range['NAT']
+		logger.print2("\tSelecting where %s"%select_sql)
+		arcpy.management.MakeFeatureLayer(natdist_fc_name, "temp_lyr")
+		arcpy.management.SelectLayerByAttribute("temp_lyr", "NEW_SELECTION", select_sql)
+		num_selected = int(arcpy.management.GetCount("temp_lyr")[0])
+		logger.print2("\tSelected %s records"%num_selected)
+
+		# copy
+		logger.print2("\tCopying over the selected records")
+		outNAT1 = os.path.join(dest_fd,"%s"%dsNAT1)
+		arcpy.CopyFeatures_management(in_features="temp_lyr",out_feature_class=outNAT1)
+		logger.print2("\tDone!")
+
+	if 'NAT2' in step_list:
+		# simple yet time consuming. Starting from the product of step AR1 (outAR1e), populate necessary fields for each layer.
+		logger.print2("\n\n#########     NAT2. Add Inventory Fields and Populate them     ##########\n")
+
+		logger.print2("Making a new Feature dataset: %s"%dsNAT2)
+		dest_fd = os.path.join(out_event_gdb, dsNAT2)
+		arcpy.Delete_management(dest_fd)
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsNAT2, projfile)
+
+		last_fc = os.path.join(out_event_gdb,dsNAT1,dsNAT1)
+		out_fc = os.path.join(dest_fd,dsNAT2)
+		logger.print2("\nCopying over to %s"%dsNAT2)
+		arcpy.CopyFeatures_management(in_features=last_fc,out_feature_class=out_fc)
+
+		# add fields
+		logger.print2("\nAdding fields")
+		for field, field_info in neofields.items():
+			if field not in fields_to_exclude:
+				fname = "NATD_%s"%field # eg. HRV_YRSOURCE
+				logger.print2("\tAdding %s"%fname)
+				ftype = field_info[0]
+				if ftype == 'TEXT':
+					flength = field_info[1]
+					arcpy.AddField_management(in_table = out_fc, field_name = fname, field_type = ftype, field_length = "%s"%flength)		
+				else: # for 'FLOAT','SHORT', etc.
+					arcpy.AddField_management(in_table = out_fc, field_name = fname, field_type = ftype)
+		logger.print2("\tDone!")
+
+		# populate inventory fields
+		f = [str(f.name).upper() for f in arcpy.ListFields(out_fc)] # all the fields, uppercase
+
+		# YRSOURCE
+		logger.print2("Populating the fields above...")
+		natdid_deptype = {'BLDN':'BLOWDOWN', 'DROT':'DROUGHT', 'FLOD':'FLOOD', 'ICED':'ICE', 'SNOW':'SNOW'}
+		with arcpy.da.UpdateCursor(out_fc, f) as cursor:
+			for row in cursor:
+				year = row[f.index('YEAR')]
+				row[f.index('NATD_YRSOURCE')] = year
+				natdid = row[f.index('NATDID')].upper()
+				row[f.index('NATD_SOURCE')] = "NAT_%s"%natdid
+				row[f.index('NATD_YRDEP')] = year
+
+				# DEPTYPE
+				source = row[f.index('SOURCE')].upper() # file source (budworm, fire, Disease, etc.)
+				deptype = 'UNKNOWN'
+				if source in ['FIRE','DISEASE']:
+					deptype = source
+				elif source in ['BUDWORM','FTCT','OTHPEST']:
+					deptype = 'INSECTS'
+				elif natdid in natdid_deptype.keys():
+					deptype = natdid_deptype[natdid]
+				# other exception
+				elif natdid == 'SCRH':
+					deptype = 'DROUGHT'
+				row[f.index('NATD_DEPTYPE')] = deptype
+
+				row[f.index('NATD_DEVSTAGE')] = 'DEPNAT'
+				row[f.index('NATD_STKG')] = 0.1
+				row[f.index('NATD_YRORG')] = year
+				row[f.index('NATD_AGE')] = year_now - year
+				row[f.index('NATD_HT')] = (year_now - year)*ht_per_year
+				row[f.index('NATD_CCLO')] = 11
+
+				cursor.updateRow(row)
+		logger.print2("\tDone!")
+
+
+
+
+	# use dissolve to delete fields
+
 
 
 	if 'AR1' in step_list:
@@ -173,33 +257,6 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 			arcpy.management.Eliminate(in_features="elimlayer1",out_feature_class=outAR1e,selection="AREA",ex_where_clause="")
 			logger.print2("\tDone!")
 
-
-	if 'NAT1' in step_list:
-		# this one is easy. Just need to select and copy over to the new dataset because it's already flat
-		arcpy.env.workspace = in_natdist_gdb
-		natdist_fc_name = 'NatDist_MT_LatestOnly'
-
-		logger.print2("\n\n#########   NAT1. Select and Copy NatDist_MT_LatestOnly  ##########\n")
-		logger.print2("Making a new Feature dataset: %s"%dsNAT1)
-		arcpy.Delete_management(os.path.join(out_event_gdb,dsNAT1))
-		arcpy.CreateFeatureDataset_management(out_event_gdb, dsNAT1, projfile)
-		dest_fd = os.path.join(out_event_gdb, dsNAT1)
-
-		# select
-		select_sql = time_range['NAT']
-		logger.print2("\tSelecting where %s"%select_sql)
-		arcpy.management.MakeFeatureLayer(natdist_fc_name, "temp_lyr")
-		arcpy.management.SelectLayerByAttribute("temp_lyr", "NEW_SELECTION", select_sql)
-		num_selected = int(arcpy.management.GetCount("temp_lyr")[0])
-		logger.print2("\tSelected %s records"%num_selected)
-
-		# copy
-		logger.print2("\tCopying over the selected records")
-		outNAT1 = os.path.join(dest_fd,"%s"%dsNAT1)
-		arcpy.CopyFeatures_management(in_features="temp_lyr",out_feature_class=outNAT1)
-		logger.print2("\tDone!")
-
-
 	if 'AR2' in step_list:
 		# simple yet time consuming. Starting from the product of step AR1 (outAR1e), populate necessary fields for each layer.
 		logger.print2("\n\n#########     AR2. Add Inventory Fields     ##########\n")
@@ -246,7 +303,6 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 							arcpy.AddField_management(in_table = outAR2, field_name = fname, field_type = ftype)			
 
 		logger.print2("\tDone!")
-
 
 	if 'AR2-1' in step_list:
 		# This is the complex part. Populating inventory fields such as "HRV_SILVSYS" based on AR data
@@ -420,8 +476,6 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 							row[f.index('%s_YRDEP'%lyrtype)] = yrorg
 							cursor.updateRow(row)
 
-
-
 	if 'AR3' in step_list:
 		# Simple but time consuming. union all 4 AR layers, and delete / add fields
 		logger.print2("\n\n#########    AR3  Union All AR data (5mins)  ##########\n")
@@ -439,7 +493,6 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 		logger.print2("\nUnioning all AR data (takes about 5-10mins)")
 		arcpy.analysis.Union(in_features=AR2_fcs_full,out_feature_class=dest_fc,join_attributes="ALL",cluster_tolerance=None,gaps="GAPS")
 		logger.print2("\tDone!")
-
 
 	if 'AR4' in step_list:
 		# delete fields, add AR_ inventory fields (eg. AR_YRSOURCE)
@@ -469,6 +522,7 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 
 		logger.print2("\nDeleting fields except these fields: (this may take over 10 mins)\n%s\n"%keep_fields)
 		arcpy.management.DeleteField(dest_fc, keep_fields, "KEEP_FIELDS")
+		# in the future, I should replace delete field with dissolve because it's actually faster to dissolve than delete field
 
 		# add fields
 		logger.print2("\nAdding Fields")
@@ -482,11 +536,9 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 			else: # for 'FLOAT','SHORT', etc.
 				arcpy.AddField_management(in_table = dest_fc, field_name = fname, field_type = ftype)
 
-
-	# do multi to single, eliminate at 100m2, you will eliminate about 30% of polys (delete fields that comes out of that)
 	if 'AR5' in step_list:
 		# this step significantly reduces the number of polygons we need to deal with
-		logger.print2("\n\n#########    AR5. Multi to Single, then eliminate <200m2 (10mins)  ##########\n")
+		logger.print2("\n\n#########    AR5. Multi to Single, then eliminate %sm2  ##########\n"%eliminate_sqm)
 		
 		last_fc = os.path.join(out_event_gdb, dsAR4, dsAR4)
 
@@ -503,13 +555,19 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 		# multi to single
 		logger.print2("\nRunning Multipart to Single Part on %s"%last_fc)
 		arcpy.management.MultipartToSinglepart(in_features=last_fc,out_feature_class=dsAR5a)
-		
-		# Eliminate
-		logger.print2("\nRunning Eliminate anything less than 200m2")
-		elim_select_sql = "SHAPE_AREA < 200"
+
+		# Eliminate polys 
+		logger.print2("\nRunning Eliminate anything less than %sm2"%eliminate_sqm)
+		elim_select_sql = "SHAPE_AREA < %s"%eliminate_sqm
 		arcpy.MakeFeatureLayer_management(dsAR5a, "elimlayer1")
 		arcpy.SelectLayerByAttribute_management("elimlayer1", "NEW_SELECTION",elim_select_sql)
-		arcpy.management.Eliminate(in_features="elimlayer1",out_feature_class=dsAR5b,selection="LENGTH",ex_where_clause="")
+		arcpy.management.Eliminate(in_features="elimlayer1",out_feature_class=dsAR5b,selection="AREA",ex_where_clause="")
+
+		# delete less than Xm2 (island polygons that didn't get eliminated)
+		logger.print2("\nDeleting anything less than %sm2 (rest of the small polys that didn't get eliminated)"%eliminate_sqm)
+		with arcpy.da.UpdateCursor(dsAR5b,["SHAPE_AREA"],elim_select_sql) as cursor:
+			for row in cursor:
+				cursor.deleteRow()
 
 		# count after
 		count_after = int(arcpy.management.GetCount(dsAR5b)[0])
@@ -517,7 +575,6 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 		diff_percent = round(100*diff/count_orig,2)
 		logger.print2("\nPolygons eliminated: %s - %s = %s (%s%%)"%(count_orig,count_after,diff,diff_percent))
 		logger.print2("\nDone!")
-
 
 	if 'AR5-2' in step_list:
 		# Use the unionized data from all 4 AR layers, pick the best or the latest information to populate inventory fields
@@ -527,12 +584,13 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 		last_fc = os.path.join(out_event_gdb, dsAR5, "%sb_Elim"%dsAR5)
 		f = [str(f.name).upper() for f in arcpy.ListFields(last_fc)] # all the fields, uppercase
 
-		fields_by_hrv_n_est = ['YRSOURCE','SOURCE','YRDEP','SILVSYS','DEPTYPE','AGE','HT'] # if occurs in both HRV and EST, use the latest data
+		fields_by_hrv_n_est = ['YRSOURCE','SOURCE','YRDEP','SILVSYS','DEPTYPE','YRORG','AGE','HT'] # if occurs in both HRV and EST, use the latest data
 		fields_by_est_only = ['SPCOMP','PLANFU','YIELD','LEADSPC']
 
-		# 'YRSOURCE','SOURCE','SILVSYS','DEPTYPE','AGE','HT'
+		# 'YRSOURCE','SOURCE','YRDEP','SILVSYS','DEPTYPE','YRORG','AGE','HT'
+		# Note that YRSOURCE and SOURCE won't be updated by RGN and SGR layers even though RGN changes DEVSTAGE and SGR chanages SGR
 		logger.print2("\nThe following fields are dependent on EST and HRV:\n%s"%fields_by_hrv_n_est)
-		logger.print2("\tUpdating the fields above...")
+		logger.print2("\tUpdating the fields above using the latest information...")
 		with arcpy.da.UpdateCursor(last_fc, f) as cursor:
 			for row in cursor:
 				for i in fields_by_hrv_n_est:
@@ -603,12 +661,85 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 		logger.print2("\tDone!")
 
 
+		# SGR
+		logger.print2("\nUpdating SGR with the latest SGR value from HRV, EST and SGR...")
+		with arcpy.da.UpdateCursor(last_fc, f) as cursor:
+			for row in cursor:
+				sgr = None # default when there's no SGR found
+				hrv_val = "%s*HRV"%row[f.index('HRV_SGR')] if row[f.index('HRV_SGR')] not in ['','-'] else None
+				sgr_val = "%s*SGR"%row[f.index('SGR_SGR')] if row[f.index('SGR_SGR')] not in ['','-'] else None
+				est_val = "%s*EST"%row[f.index('EST_SGR')] if row[f.index('EST_SGR')] not in ['','-'] else None
+				hrv_yr = row[f.index('HRV_YRSOURCE')] if hrv_val != None else 0
+				sgr_yr = row[f.index('SGR_YRSOURCE')] if sgr_val != None else 0
+				est_yr = row[f.index('EST_YRSOURCE')] if est_val != None else 0
+				val = [hrv_val,sgr_val,est_val]
+				yr = [hrv_yr,sgr_yr,est_yr]
+				sgr_yr = {"%s%s"%(k,v):v for k,v in zip(val,yr) if k != None} # eg. {'PJ1-PJ1*SGR2023': 2023, ...}
+
+				# if SGR appears in only one of them, just use that
+				if len(sgr_yr) == 1:
+					sgr = list(sgr_yr.keys())[0]
+				# if more than one SGR, then use the latest one (complicates when two SGR appears in same year - in that case, we just pick one)
+				elif len(sgr_yr) > 1:
+					sorted_sgr_yr = dict(sorted(sgr_yr.items(), key=lambda item: item[1], reverse=True)) # reverse sort the sgr_yr so the latest year comes first
+					sgr = list(sorted_sgr_yr.keys())[0]
+				
+				row[f.index('AR_SGR')] = sgr
+				cursor.updateRow(row)
+		logger.print2("\tDone!")
+
+		# STKG
+		logger.print2("\nUpdating STKG (Use EST's STKG or if HRV SILVSYS=CC then '0.1')")
+		with arcpy.da.UpdateCursor(last_fc, f) as cursor:
+			for row in cursor:
+				stkg = None # default when there's no STKG update
+				est_val = row[f.index('EST_STKG')] if row[f.index('EST_STKG')] not in [None,0] else 0
+				hrv_val = row[f.index('HRV_STKG')] if row[f.index('HRV_STKG')] not in [None,0] else 0
+
+				# if est stocking value exist, just use that, otherwise use hrv value only if it exists
+				if est_val > 0:
+					stkg = est_val
+				elif hrv_val > 0:
+					stkg = hrv_val
+
+				row[f.index('AR_STKG')] = stkg
+				cursor.updateRow(row)
+		logger.print2("\tDone!")
+
+		# CCLO
+		logger.print2("\nUpdating CCLO (only if HRV SILVSYS=CC and AGE <= 5 then update CCLO=1)")
+		with arcpy.da.UpdateCursor(last_fc, f) as cursor:
+			for row in cursor:
+				cclo = None # default when there's no STKG update
+				if row[f.index('HRV_SILVSYS')] == 'CC':
+					if row[f.index('HRV_AGE')] < 5:
+						cclo = 1
+				row[f.index('AR_CCLO')] = cclo
+				cursor.updateRow(row)
+		logger.print2("\tDone!")
+
+	if 'AR6' in step_list:
+		# this step significantly reduces the number of polygons we need to deal with
+		logger.print2("\n\n#########    AR6. Finalize AR-derived Inventory  ##########\n")
+		
+		last_fc = os.path.join(out_event_gdb, dsAR5, "%sb_Elim"%dsAR5)
+
+		logger.print2("\nMaking a new Feature dataset: %s"%dsAR6)
+		dest_fd = os.path.join(out_event_gdb, dsAR6)
+		arcpy.Delete_management(dest_fd)
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsAR6, projfile)
+		dsAR6a = os.path.join(dest_fd,"AR_fin")
+
+		ar_fields = [str(f.name) for f in arcpy.ListFields(last_fc) if f.name.startswith('AR_')] # eg. AR_YRSOURCE, AR_SPCOMP...
+
+		# dissolve
+		logger.print2("\nRunning dissolve on all AR_ fields (This also significantly reduces number of polys)")
+		arcpy.management.Dissolve(in_features=last_fc,out_feature_class=dsAR6a,dissolve_field=ar_fields,statistics_fields=None,multi_part="SINGLE_PART")
+		logger.print2("\tDone!")
 
 
 
 
-
-	# do eliminate and dissolve 
 
 
 
@@ -632,13 +763,16 @@ if __name__ == '__main__':
 	para = {
 	'ht_per_year': 0.3,
 	'simplify_meters': 2,
-	'eliminate_sqm': 500,
+	'eliminate_sqm': 500, # should be greater than 200
 	}
 	# step_list: we don't have time to run everything again when something goes wrong. if your AR2 fails, you can fix the bug and run it again start AR2 without running AR1
 	# previous step should've been run before running the step that comes after.
 	# for example, AR2-1 can run on its own if you've previously completed AR1 and AR2
-	step_list = ['AR1','NAT1','AR2','AR2-1','AR3','AR4','AR5','AR5-2']
-	step_list = ['AR5-2']
+	step_list = 'ALL'
+	step_list = ['NAT2']
+
+	if step_list == 'ALL':
+		step_list = ['NAT1','NAT2','AR1','AR2','AR2-1','AR3','AR4','AR5','AR5-2','AR6']
 
 
 	######### logfile stuff
