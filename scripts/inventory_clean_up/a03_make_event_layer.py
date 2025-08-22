@@ -36,14 +36,13 @@ fields_to_exclude = ['SILVSYS','SPCOMP','PLANFU','YIELD','SGR','LEADSPC']
 
 import arcpy
 import os, csv
-import pandas as pd
 
 arcpy.env.overwriteOutput = True
 arcpy.env.XYTolerance = "0.01 Meters" # by default, it is 0.001 meters, which can generate 1mm-wide overlaps and gaps. So 0.01m is preferred.
 projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj") # this works for all scripts that are one folder level deep. eg. scripts/sqlite/script.py
 
 
-def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, year_now, para, step_list):
+def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, boundary_fc, time_range, year_now, para, step_list):
 
 	# these are the layers from in_arar_gdb that will be used to build event layer
 	orig_ar_layers = {'HRV':'HRV_All_02_n_up','EST':'EST_Y_02_n_up','RGN':'Regen_All_02_n_up','SGR':'SGR_Flat'}
@@ -60,6 +59,7 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 	# common variables
 	dsAR1,dsAR2,dsAR3,dsAR4,dsAR5,dsAR6 = 'AR1','AR2','AR3','AR4','AR5','AR6'
 	dsNAT1,dsNAT2,dsNAT3 = 'NAT1','NAT2','NAT3'
+	dsNEO1, dsNEO2, dsNEO3, dsNEO4 = 'NEO1','NEO2','NEO3','NEO4'
 
 	if 'NAT1' in step_list:
 		# this one is easy. Just need to select and copy over to the new dataset because it's already flat
@@ -152,10 +152,40 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 				cursor.updateRow(row)
 		logger.print2("\tDone!")
 
-
-
-
 	# use dissolve to delete fields
+	if 'NAT3' in step_list:
+		# simple yet time consuming. Starting from the product of step AR1 (outAR1e), populate necessary fields for each layer.
+		logger.print2("\n\n#########     NAT3.  Dissolve and Eliminate    ##########\n")
+
+		logger.print2("Making a new Feature dataset: %s"%dsNAT3)
+		dest_fd = os.path.join(out_event_gdb, dsNAT3)
+		arcpy.Delete_management(dest_fd)
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsNAT3, projfile)
+
+		last_fc = os.path.join(out_event_gdb,dsNAT2,dsNAT2)
+		out_fc1 = os.path.join(dest_fd,"%sa_dissolv"%dsNAT3)
+		out_fc2 = os.path.join(dest_fd,"NATD_fin")
+
+		natd_fields = [str(f.name).upper() for f in arcpy.ListFields(last_fc) if f.name.startswith('NATD_')]
+
+		# dissolve
+		logger.print2("\nRunning dissolve on all NAT_ fields")
+		arcpy.management.Dissolve(in_features=last_fc,out_feature_class=out_fc1,dissolve_field=natd_fields,statistics_fields=None,multi_part="SINGLE_PART")
+		logger.print2("\tDone!")
+
+		# Eliminate polys 
+		logger.print2("\nRunning Eliminate anything less than %sm2"%eliminate_sqm)
+		elim_select_sql = "SHAPE_AREA < %s"%eliminate_sqm
+		arcpy.MakeFeatureLayer_management(out_fc1, "elimlayer1")
+		arcpy.SelectLayerByAttribute_management("elimlayer1", "NEW_SELECTION",elim_select_sql)
+		arcpy.management.Eliminate(in_features="elimlayer1",out_feature_class=out_fc2,selection="AREA",ex_where_clause="")
+
+		# delete less than Xm2 (island polygons that didn't get eliminated)
+		logger.print2("Deleting anything less than %sm2 (rest of the small polys that didn't get eliminated)"%eliminate_sqm)
+		with arcpy.da.UpdateCursor(out_fc2,["SHAPE_AREA"],elim_select_sql) as cursor:
+			for row in cursor:
+				cursor.deleteRow()
+		logger.print2("\nCompleted inventorifying Natural Disturbance!!")
 
 
 
@@ -169,7 +199,7 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 			raise Exception(err1)
 
 		arcpy.env.workspace = in_arar_gdb
-		logger.print2("\n\n#########   AR1. Select, simplify and flatten  ##########\n")
+		logger.print2("\n\n##########    AR1. Select, simplify and flatten   ###########\n")
 		logger.print2("Making a new Feature dataset: %s"%dsAR1)
 		arcpy.Delete_management(os.path.join(out_event_gdb,dsAR1))
 		arcpy.CreateFeatureDataset_management(out_event_gdb, dsAR1, projfile)
@@ -646,9 +676,15 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 				# case 2: EST only (missing RGN? we assume it was natural regen)
 				elif hrv_dev == None and rgn_dev == None and est_dev != None:
 					devstage = 'ESTNAT'
-				# case 3: RGN only AND case 4: RGN and HRV (in both of these cases, RGN dictates)
-				elif rgn_dev != None and est_dev == None:
+				# case 3: RGN only 
+				elif hrv_dev == None and rgn_dev != None and est_dev == None:
 					devstage = rgn_dev
+				# case 4: RGN and HRV (use the latest)
+				elif hrv_dev != None and rgn_dev != None and est_dev == None:
+					if row[f.index('HRV_YRSOURCE')] < row[f.index('RGN_YRSOURCE')]:
+						devstage = rgn_dev
+					else:
+						devstage = hrv_dev
 				# case 5: HRV + EST (missing RGN? we assume it was natural regen)
 				elif hrv_dev != None and rgn_dev == None and est_dev != None:
 					devstage = 'ESTNAT'
@@ -657,6 +693,10 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 					rgn_type = rgn_dev [3:] # NAT, PLANT, or SEED
 					devstage = "EST%s"%rgn_type # ESTNAT, ESTPLANT, or ESTSEED
 				row[f.index('AR_DEVSTAGE')] = devstage
+				# also update YRSOURCE if we are using rgn_dev and if RGN_YRSOURCE is the latest
+				if devstage == rgn_dev:
+					if row[f.index('AR_YRSOURCE')] == None or row[f.index('AR_YRSOURCE')] < row[f.index('RGN_YRSOURCE')]:
+						row[f.index('AR_YRSOURCE')] = row[f.index('RGN_YRSOURCE')]
 				cursor.updateRow(row)
 		logger.print2("\tDone!")
 
@@ -735,9 +775,184 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, yea
 		# dissolve
 		logger.print2("\nRunning dissolve on all AR_ fields (This also significantly reduces number of polys)")
 		arcpy.management.Dissolve(in_features=last_fc,out_feature_class=dsAR6a,dissolve_field=ar_fields,statistics_fields=None,multi_part="SINGLE_PART")
+		logger.print2("\nCompleted inventorifying Annual Report HRV, EST, RGN, and SGR!!")
+
+
+###################################################################
+# At this point, the final 'AR_fin' and 'NATD_fin' are the final products of the above scripts.
+# these two layers contain inventory fields but prefixed with AR_ and NATD_ respectively
+# Next step is to union the two layers, grabbing the latest and best information from both, and save them in NEO_ inventory fields.
+
+	if 'NEO1' in step_list:
+		logger.print2("\n\n#########    NEO1. Union AR and NATD INV and add NEO_ fields ##########\n")
+		
+		arcpy.env.workspace = out_event_gdb
+		ar_fc = 'AR_fin'
+		natd_fc = 'NATD_fin'
+
+		logger.print2("\nMaking a new Feature dataset: %s"%dsNEO1)
+		dest_fd = os.path.join(out_event_gdb, dsNEO1)
+		arcpy.Delete_management(dest_fd)
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsNEO1, projfile)
+		NEO1fc = os.path.join(dest_fd,"%sa_union"%dsNEO1)
+
+		logger.print2("\nUnioning AR_fin and NATD_fin... (this might take a few minutes)")
+		arcpy.analysis.Union(in_features=[ar_fc,natd_fc],out_feature_class=NEO1fc,join_attributes="ALL",cluster_tolerance=None,gaps="GAPS")
+		logger.print2("\tDone!")
+
+		logger.print2("\nAdding NEO_ inventory fields")
+		for field, field_info in neofields.items():
+			fname = "NEO_%s"%field # eg. NEO_YRSOURCE
+			logger.print2("\tAdding %s"%fname)
+			ftype = field_info[0]
+			if ftype == 'TEXT':
+				flength = field_info[1]
+				arcpy.AddField_management(in_table = NEO1fc, field_name = fname, field_type = ftype, field_length = "%s"%flength)		
+			else: # for 'FLOAT','SHORT', etc.
+				arcpy.AddField_management(in_table = NEO1fc, field_name = fname, field_type = ftype)
 		logger.print2("\tDone!")
 
 
+	if 'NEO2' in step_list:
+		logger.print2("\n\n#########    NEO2. Populate NEO_ inventory fields ##########\n")
+		
+		last_fc = os.path.join(out_event_gdb,dsNEO1,"%sa_union"%dsNEO1)
+
+		logger.print2("\nMaking a new Feature dataset: %s"%dsNEO2)
+		dest_fd = os.path.join(out_event_gdb, dsNEO2)
+		arcpy.Delete_management(dest_fd)
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsNEO2, projfile)
+		NEO2fc = os.path.join(dest_fd,dsNEO2)
+
+		logger.print2("\nCopying over to %s dataset"%dsNEO2)
+		arcpy.CopyFeatures_management(in_features=last_fc,out_feature_class=NEO2fc)
+
+		# get fieldnames
+		f = [str(f.name).upper() for f in arcpy.ListFields(NEO2fc)] # that is all fieldnames
+		ar_fields = [i for i in f if i.startswith('AR_')]
+		natd_fields = [i for i in f if i.startswith('NATD_')]
+
+		# First, select where only AR data exists and populate NEO fields with that
+		ar_only_sql = "FID_NATD_fin = -1"
+		logger.print2("\nUpdating NEO_ fields where only AR data exists")
+		with arcpy.da.UpdateCursor(NEO2fc, f, ar_only_sql) as cursor:
+			for row in cursor:
+				for ar_f in ar_fields:
+					neo_f = "NEO_%s"%ar_f[3:]
+					row[f.index(neo_f)] = row[f.index(ar_f)]
+				cursor.updateRow(row)
+		logger.print2("\tDone!")
+
+		# Secondly, select where only NATD data exists and populate NEO fields with that
+		natd_only_sql = "FID_AR_fin = -1"
+		logger.print2("\nUpdating NEO_ fields where only NATD data exists")
+		with arcpy.da.UpdateCursor(NEO2fc, f, natd_only_sql) as cursor:
+			for row in cursor:
+				for natd_f in natd_fields:
+					neo_f = "NEO_%s"%natd_f[5:]
+					row[f.index(neo_f)] = row[f.index(natd_f)]
+				cursor.updateRow(row)
+		logger.print2("\tDone!")
+
+		# lastly, where the two intersect
+		ar_natd_overlap_sql = "FID_AR_fin > -1 AND FID_NATD_fin > -1"
+		ar_only_fields = ['SILVSYS','SPCOMP','PLANFU','YIELD','SGR','LEADSPC'] # these fields will be updated only from AR fields
+		latest_only_fields = ['SOURCE','YRDEP','DEVSTAGE','STKG','YRORG','AGE','HT','CCLO','DEPTYPE']
+		logger.print2("\nUpdating rest of the NEO_ fields")
+		with arcpy.da.UpdateCursor(NEO2fc, f, ar_natd_overlap_sql) as cursor:
+			for row in cursor:
+				ar_yrsource = row[f.index('AR_YRSOURCE')] if row[f.index('AR_YRSOURCE')] != None else 0
+				natd_yrsource = row[f.index('NATD_YRSOURCE')] if row[f.index('NATD_YRSOURCE')] != None else 0
+				if ar_yrsource == 0 and natd_yrsource == 0:
+					# this is a special case where only SGR values exists (AR_SGR)
+					yrsource = None # don't update yrsource
+					row[f.index('NEO_SGR')] = row[f.index('AR_SGR')]
+				# case where AR data is more recent
+				elif ar_yrsource > natd_yrsource: 
+					yrsource = ar_yrsource
+					for field in latest_only_fields:
+						ar_val = row[f.index('AR_%s'%field)]
+						if ar_val != None:
+							row[f.index('NEO_%s'%field)] = ar_val
+						else:
+							row[f.index('NEO_%s'%field)] = row[f.index('NATD_%s'%field)]
+				# case where NATD data is more recent
+				elif ar_yrsource <= natd_yrsource: # if both AR event and NATD event happens on the same year, NATD trumps
+					yrsource = natd_yrsource
+					for field in latest_only_fields:
+						natd_val = row[f.index('NATD_%s'%field)]
+						if natd_val != None:
+							row[f.index('NEO_%s'%field)] = natd_val
+						else:
+							row[f.index('NEO_%s'%field)] = row[f.index('AR_%s'%field)]
+
+				# the following fields will completely dependent on AR_ fields whether AR_YRSOURCE is the latest or not
+				for field in ar_only_fields:
+					row[f.index('NEO_%s'%field)] = row[f.index('AR_%s'%field)]
+
+				# deptype is also a special one. if the latest AR_DEPTYPE is 'UNKNOWN', use NATD_DEPTYPE
+				if ar_yrsource >= natd_yrsource:
+					if row[f.index('AR_DEPTYPE')] == 'UNKNOWN' and row[f.index('NATD_DEPTYPE')] not in [None,'']:
+						row[f.index('NEO_DEPTYPE')] = row[f.index('NATD_DEPTYPE')]
+
+				row[f.index('NEO_YRSOURCE')] = yrsource
+				cursor.updateRow(row)
+		logger.print2("\tDone!")
+
+
+	# I could've done this for all previous steps...
+	last_fc = os.path.join(out_event_gdb,dsNEO2,dsNEO2)
+	dest_fd = os.path.join(out_event_gdb, dsNEO3)
+	NEO3fc = os.path.join(dest_fd,dsNEO3)
+	if 'NEO3' in step_list:
+		logger.print2("\n\n#########     NEO3. Union with MU Boundary    ##########\n")
+
+		logger.print2("\nMaking a new Feature dataset: %s"%dsNEO3)
+		arcpy.Delete_management(dest_fd)
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsNEO3, projfile)
+
+		logger.print2("\nUnioning with MU Boundary fc...")
+		arcpy.analysis.Union(in_features=[last_fc,boundary_fc],out_feature_class=NEO3fc,join_attributes="ALL",cluster_tolerance=None,gaps="GAPS")
+		logger.print2("\tDone!")
+
+		logger.print2("\nDeleting empty polygons generated by the Union tool")
+		with arcpy.da.UpdateCursor(NEO3fc, ['FID_NEO2'], "FID_NEO2 = -1") as cursor:
+			for row in cursor:
+				cursor.deleteRow()
+
+
+	# next step
+	last_fc = NEO3fc
+	dest_fd = os.path.join(out_event_gdb, dsNEO4)
+	NEO4fc_a = os.path.join(dest_fd,"%sa_dislv"%dsNEO4)
+	NEO4fc_b = os.path.join(dest_fd,"NEO_fin")
+	if 'NEO4' in step_list:
+		logger.print2("\n\n#########     NEO4. Dissolve, Multi to Single and Eliminate    ##########\n")
+
+		logger.print2("\nMaking a new Feature dataset: %s"%dsNEO4)
+		arcpy.Delete_management(dest_fd)
+		arcpy.CreateFeatureDataset_management(out_event_gdb, dsNEO4, projfile)
+
+		logger.print2("\nRunning Dissolve (and deleting unnecessary fields)...")
+		keep_fields = [f.name for f in arcpy.ListFields(last_fc) if f.name.startswith("NEO_")]
+		keep_fields.append("INV_NAME")
+		arcpy.management.Dissolve(in_features=last_fc,out_feature_class=NEO4fc_a,dissolve_field=keep_fields,statistics_fields=None,multi_part="SINGLE_PART")
+
+		# do I need to do multi to single after that dissolve? - the answer is NO! Dissolve with single part setting does that for me.
+
+		# Eliminate polys 
+		logger.print2("\nRunning Eliminate anything less than %sm2"%eliminate_sqm)
+		elim_select_sql = "SHAPE_AREA < %s"%eliminate_sqm
+		arcpy.MakeFeatureLayer_management(NEO4fc_a, "elimlayer1")
+		arcpy.SelectLayerByAttribute_management("elimlayer1", "NEW_SELECTION",elim_select_sql)
+		arcpy.management.Eliminate(in_features="elimlayer1",out_feature_class=NEO4fc_b,selection="AREA",ex_where_clause="")
+
+		# delete less than Xm2 (island polygons that didn't get eliminated)
+		logger.print2("\nDeleting anything less than %sm2 (rest of the small polys that didn't get eliminated)"%eliminate_sqm)
+		with arcpy.da.UpdateCursor(NEO4fc_b,["SHAPE_AREA"],elim_select_sql) as cursor:
+			for row in cursor:
+				cursor.deleteRow()
+		logger.print2("\tDone!")
 
 
 
@@ -752,12 +967,14 @@ if __name__ == '__main__':
 	in_arar_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\D\AR\AnalysisReadyAR.gdb' # the outcome of AR_AR.py
 	in_natdist_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\E\Natural_Disturbance\NatDist.gdb' # after running AnalysisReady_NatDist.py
 	out_event_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\EventLayer.gdb' # this must already exist - it can be just an empty gdb with whatever name you want
+	boundary_fc = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\D\GeoData\PIAMMar2024.gdb\FMU_FN_PARK_Boundary_Simp2m' # only used on later steps (NEO3)
 	time_range = {
 	'HRV': "AR_YEAR >= 2015",
 	'RGN': "AR_YEAR >= 2010", # only affects devstage. without RGN, we can't figure out if devstage is ESTNAT or ESTPLANT
 	'EST': "AR_YEAR >= 2015",
 	'SGR': "AR_YEAR >= 2015",
-	'NAT': "YEAR >= 2015",
+	'NAT': "YEAR >= 2015 AND SOURCE in ('FIRE','Weather')", # do fire and weather only because insect damage doesn't necessarily kill all the trees.
+	# 'NAT': "YEAR >= 2015",
 	} # 
 	year_now = 2025 # used to re-calculate age
 	para = {
@@ -769,10 +986,10 @@ if __name__ == '__main__':
 	# previous step should've been run before running the step that comes after.
 	# for example, AR2-1 can run on its own if you've previously completed AR1 and AR2
 	step_list = 'ALL'
-	step_list = ['NAT2']
+	step_list = ['NEO4']
 
 	if step_list == 'ALL':
-		step_list = ['NAT1','NAT2','AR1','AR2','AR2-1','AR3','AR4','AR5','AR5-2','AR6']
+		step_list = ['NAT1','NAT2','NAT3','AR1','AR2','AR2-1','AR3','AR4','AR5','AR5-2','AR6','NEO1','NEO2','NEO3','NEO4']
 
 
 	######### logfile stuff
@@ -799,7 +1016,7 @@ if __name__ == '__main__':
 	##########
 
 	# run the main function(s)
-	make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, time_range, year_now, para, step_list)
+	make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, boundary_fc, time_range, year_now, para, step_list)
 
 	# finish writing the logfile
 	logger.log_close()
