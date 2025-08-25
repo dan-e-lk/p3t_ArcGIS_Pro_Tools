@@ -1,3 +1,4 @@
+# ready to use!
 # Make event layer out of NatDist_MT_LatestOnly and Analysis-Ready AR
 # references:
 # https://ontariogov.sharepoint.com/sites/MNRF-PD-INT/CFLPB/CFLPB-FPPS/ForestExplorer/Shared%20Documents/ARTabularData/PIAM_Metadata.xlsx?web=1
@@ -919,7 +920,7 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, boundary_fc, ti
 		with arcpy.da.UpdateCursor(NEO3fc, ['FID_NEO2'], "FID_NEO2 = -1") as cursor:
 			for row in cursor:
 				cursor.deleteRow()
-
+	### NOTE THAT THE ABOVE STEP COULD CREATE SELF-INTERSECTS: this can be dealt with during the last clean-up stage.
 
 	# next step
 	last_fc = NEO3fc

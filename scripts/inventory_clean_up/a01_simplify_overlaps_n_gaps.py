@@ -1,7 +1,10 @@
+# ready to use! (add repair geometry script)
 # aka INV_CLEANER_01
 # This cleans up the existing inventory of the self-intersects, duplicates and polygons outside MU boundary, 
 # It also simplifies polygon vertices and eliminates small ones.
 # It doesn't alter the original input inventory.
+# the input inventories must have the same fc names as the inventories in the original PIAM (eg. FC421, Lake_Superior_Islands, etc.)
+# the input inventories doesn't have to have all the mandatory fields. This tool just cleans up geometry errors.
 
 
 # Steps:
@@ -15,7 +18,7 @@
 # D. Replace the intersects and duplicates from the inventory
 # 	1. Erase the inventory with the product of step C
 # 	2. Append the product of step C to the inventory
-# E. Run Eliminate - default setting: "SHAPE_AREA < 500 OR (POLYTYPE='FOR' AND SHAPE_AREA < 1000)"
+# E. Run Eliminate - default setting: "SHAPE_AREA < 500 OR (POLYTYPE='FOR' AND SHAPE_AREA < 1000)" - Then repair Geometry
 # F. Clip to MU Boundary - MU boundary must have "INV_NAME" field populated with the name of the original inventory feature classes.
 
 
@@ -117,20 +120,22 @@ def clean_inv(original_inv_gdb,output_gdb,boundary_fc,para,mu_list,step_list):
 		dest_fd = os.path.join(output_gdb, dsC)
 
 		for mu in mu_list:
-			new_fc_name = os.path.join(dest_fd,stepC_fcs[mu])
+			temp_fc_name = os.path.join(dest_fd,"%s_temp"%stepC_fcs[mu])
 			logger.print2("\nRunning Intersect on %s"%mu)
 			# arcpy.analysis.PairwiseIntersect(in_features=stepB_fcs[mu], out_feature_class=new_fc_name, join_attributes="ALL", cluster_tolerance=None, output_type="INPUT") # this kept failing (read-only issue)
-			arcpy.analysis.Intersect(in_features=stepB_fcs[mu],out_feature_class=new_fc_name,join_attributes="ALL",cluster_tolerance=None,output_type="INPUT")
+			arcpy.analysis.Intersect(in_features=stepB_fcs[mu],out_feature_class=temp_fc_name,join_attributes="ALL",cluster_tolerance=None,output_type="INPUT")
 
 			# this creates a new field that we don't want.
 			to_delete = ["FID_%s"%stepB_fcs[mu]]
 			logger.print2("\tDeleting unwanted field created by intersect tool: %s"%to_delete)
-			arcpy.management.DeleteField(new_fc_name,to_delete)
-
+			arcpy.management.DeleteField(temp_fc_name,to_delete)
 			logger.print2("\tDone!!")
-			# delete identical (keeping the first record only)
-			# In the future - we could run "sort" by YRSOURCE first, then run delete identical
-			logger.print2("Running Delete Identical tool")
+
+			# Sort, then delete identical (keeping the first record only)
+			logger.print2("\tSorting based on YRSOURCE (descending)")
+			new_fc_name = os.path.join(dest_fd,stepC_fcs[mu])
+			arcpy.management.Sort(in_dataset=temp_fc_name,out_dataset=new_fc_name,sort_field="YRSOURCE DESCENDING")
+			logger.print2("\tRunning Delete Identical tool")
 			arcpy.management.DeleteIdentical(in_dataset=new_fc_name,fields="Shape")
 			logger.print2("\tDone!!")
 
@@ -188,11 +193,33 @@ def clean_inv(original_inv_gdb,output_gdb,boundary_fc,para,mu_list,step_list):
 			orig_count = int(arcpy.GetCount_management(stepD_fcs[mu])[0])
 			arcpy.MakeFeatureLayer_management(stepD_fcs[mu], "elimlayer1")
 			arcpy.SelectLayerByAttribute_management("elimlayer1", "NEW_SELECTION",elim_select_sql)
-			arcpy.management.Eliminate(in_features="elimlayer1",out_feature_class=new_fc_name,selection="AREA",ex_where_clause="")
-			new_count = int(arcpy.GetCount_management(new_fc_name)[0])
-			elim_percent = round((((orig_count - new_count) / orig_count) * 100),2)
-			logger.print2("\tEliminated %s of %s (%s%%)"%(orig_count - new_count,orig_count,elim_percent))
+			select_count = int(arcpy.GetCount_management("elimlayer1")[0])
+			if select_count > 0:
+				logger.print2("\t\tSelected %s records"%select_count)
+				arcpy.management.Eliminate(in_features="elimlayer1",out_feature_class=new_fc_name,selection="AREA",ex_where_clause="")
+				new_count = int(arcpy.GetCount_management(new_fc_name)[0])
+				elim_percent = round((((orig_count - new_count) / orig_count) * 100),2)
+				logger.print2("\tEliminated %s of %s (%s%%)"%(orig_count - new_count,orig_count,elim_percent))
+			else:
+				logger.print2("\t\tNothing to eliminate. Just copying the data over")
+				arcpy.CopyFeatures_management(in_features="elimlayer1",out_feature_class=new_fc_name)	
 			logger.print2("\tDone!!")
+
+			# also add repair geometry here
+
+
+
+
+
+
+
+
+
+			
+
+
+
+
 
 
 	logger.print2("\n\nNOTE that the following 'clip to MU boundary' step can be skipped. \
@@ -245,6 +272,7 @@ if __name__ == '__main__':
 	# the feature class names in the original_inv_gdb must be in the format of 'FC930' or 'Park_Quetico' - to match the INV_NAME values in boundary_fc.
 	
 	output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\InvCleaner01_fin.gdb' # must already exist - will be overwritten
+	output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\InvCleaner01_test.gdb' # must already exist - will be overwritten
 	# output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\latest_inv\latest_OPI.gdb' # must already exist - will be overwritten
 	
 	boundary_fc = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\D\GeoData\PIAMMar2024.gdb\FMU_FN_PARK_Boundary_Simp2m' # Only used in Part F. FMU, FN, Park boundary layer. Should have INV_NAME field

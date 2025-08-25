@@ -1,3 +1,4 @@
+# ready to use!
 # aka INV_CLEANER_02
 # check if the outcome of the 01 tool has all the standard field.
 # copy the template - rename it to something like FC035_standardf
@@ -102,11 +103,11 @@ def clean_inv02(input_clean01_inv,output_gdb,ARI_template,boundary_fc,mu_list,fc
 	boundary_df = common_func.fc_to_pandas(boundary_fc)
 
 	# step/dataset names (this is handy when one of the steps fail and you don't want to start from the beginning)
-	dsG = 'g_standardfield'
+	dsG = 'g_standardfield' # if you change this, you must also change para variable of 04 script
 	# dsG = 'test_standardfield'
 
 	# names of all fcs to be generated
-	stepG_fcs = {mu:"%s_%s"%(mu,dsG) for mu in mu_list} # eg. {"FC421": "FC421_a_Multi2Single",...}
+	stepG_fcs = {mu:"%s_%s"%(mu,dsG) for mu in mu_list} # eg. {"FC421": "FC421_g_standardfield",...}
 
 
 	# Part G
