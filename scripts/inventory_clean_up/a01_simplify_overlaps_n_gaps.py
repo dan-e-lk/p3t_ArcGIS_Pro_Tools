@@ -203,23 +203,11 @@ def clean_inv(original_inv_gdb,output_gdb,boundary_fc,para,mu_list,step_list):
 			else:
 				logger.print2("\t\tNothing to eliminate. Just copying the data over")
 				arcpy.CopyFeatures_management(in_features="elimlayer1",out_feature_class=new_fc_name)	
+
+			# repair geometry
+			logger.print2("\tRepairing Geometry (method = OGC)")
+			arcpy.management.RepairGeometry(in_features=new_fc_name,delete_null="DELETE_NULL",validation_method="OGC")
 			logger.print2("\tDone!!")
-
-			# also add repair geometry here
-
-
-
-
-
-
-
-
-
-			
-
-
-
-
 
 
 	logger.print2("\n\nNOTE that the following 'clip to MU boundary' step can be skipped. \
@@ -297,7 +285,7 @@ if __name__ == '__main__':
 			'FarNorth_BerensRiver', 'FarNorth_CatLake', 'FarNorth_ConstanceL', 'FarNorth_MooseCree',
 			'FarNorth_NorthCentral', 'FarNorth_Northeast', 'FarNorth_Northwest', 'FarNorth_Taash',
 			'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
-			'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa'] # takes about 5 hours to run
+			'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa'] # all except 110, 490, 702, 930. takes about 5 hours to run
 
 	step_list = ['A','B','C','D','E','F'] # Unless you are debugging the tool, all the steps should be run. 
 	# step_list = ['F'] # Unless you are debugging the tool, all the steps should be run. 

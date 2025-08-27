@@ -995,7 +995,7 @@ if __name__ == '__main__':
 
 	######### logfile stuff
 
-	tool_shortname = 'Make_Event_Layer' # the output logfile will include this text in its filename.
+	tool_shortname = '03Make_Event_Layer' # the output logfile will include this text in its filename.
 
 	# importing libraries (only works if arclog.py file is located on the parent folder of this script)
 	from datetime import datetime

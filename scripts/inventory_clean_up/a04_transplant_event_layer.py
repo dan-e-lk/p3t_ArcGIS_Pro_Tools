@@ -24,7 +24,7 @@ arcpy.env.XYTolerance = "0.01 Meters" # by default, it is 0.001 meters, which ca
 projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj") # this works for all scripts that are one folder level deep. eg. scripts/sqlite/script.py
 
 
-def transplant_event_layer(event_lyr,clean02_inv_gdb,output_ARAR_gdb,mu_list,para,step_list):
+def transplant_event_layer(event_lyr,clean02_inv_gdb,output_gdb,mu_list,para,step_list):
 
 	# parameters
 	clean_inv_suffix = para['clean_inv_suffix']
@@ -32,7 +32,7 @@ def transplant_event_layer(event_lyr,clean02_inv_gdb,output_ARAR_gdb,mu_list,par
 
 	# step A
 	step = 'a'
-	ds = os.path.join(output_ARAR_gdb,step) # eg. .../AnalysisReadyInventory.gdb/a/
+	ds = os.path.join(output_gdb,step) # eg. .../AnalysisReadyInventory.gdb/a/
 	a1_fc_suffix = "_%s1_intersect"%step
 	a2_fc_suffix = "_%s2_dislv"%step
 	a3_fc_suffix = "_%s3_elim"%step
@@ -44,8 +44,8 @@ def transplant_event_layer(event_lyr,clean02_inv_gdb,output_ARAR_gdb,mu_list,par
 		logger.print2("\n\n#########   Step A. Intersect, repopulate and dissolve  ##########\n")
 		arcpy.env.workspace = clean02_inv_gdb
 		logger.print2("Making a new Feature dataset: %s"%step)
-		arcpy.Delete_management(os.path.join(output_ARAR_gdb,step))
-		arcpy.CreateFeatureDataset_management(output_ARAR_gdb, step, projfile)
+		arcpy.Delete_management(os.path.join(output_gdb,step))
+		arcpy.CreateFeatureDataset_management(output_gdb, step, projfile)
 
 		for mu in mu_list:
 			logger.print2("\nWorking on %s"%mu)
@@ -110,13 +110,13 @@ def transplant_event_layer(event_lyr,clean02_inv_gdb,output_ARAR_gdb,mu_list,par
 	# step B delete identical
 	step = 'b'
 	last_ds = ds
-	ds = os.path.join(output_ARAR_gdb,step)
+	ds = os.path.join(output_gdb,step)
 	b1_fc_suffix = "_%s1_delete_ident"%step
 	if 'B' in step_list:
 		logger.print2("\n\n#########   Step B. Delete Identical  ##########\n")
 		logger.print2("Making a new Feature dataset: %s"%step)
-		arcpy.Delete_management(os.path.join(output_ARAR_gdb,step))
-		arcpy.CreateFeatureDataset_management(output_ARAR_gdb, step, projfile)
+		arcpy.Delete_management(os.path.join(output_gdb,step))
+		arcpy.CreateFeatureDataset_management(output_gdb, step, projfile)
 
 		for mu in mu_list:
 			logger.print2("\nWorking on %s"%mu)
@@ -136,15 +136,15 @@ def transplant_event_layer(event_lyr,clean02_inv_gdb,output_ARAR_gdb,mu_list,par
 	# step C erase and append
 	step = 'c'
 	last_ds = ds
-	ds = os.path.join(output_ARAR_gdb,step)
-	# c1_fc_suffix = "_%s1_erase_n_append"%step
-	c1_fc_suffix = ""
+	ds = os.path.join(output_gdb,step)
+	c1_fc_suffix = "_%s1_erase_n_append"%step
+	# c1_fc_suffix = ""
 	if 'C' in step_list:
-		logger.print2("\n\n#########   Step C. Erase and append  ##########\n")
+		logger.print2("\n\n#########   Step C. Erase and append (and repair geometry)  ##########\n")
 		arcpy.env.workspace = clean02_inv_gdb
 		logger.print2("Making a new Feature dataset: %s"%step)
-		arcpy.Delete_management(os.path.join(output_ARAR_gdb,step))
-		arcpy.CreateFeatureDataset_management(output_ARAR_gdb, step, projfile)
+		arcpy.Delete_management(os.path.join(output_gdb,step))
+		arcpy.CreateFeatureDataset_management(output_gdb, step, projfile)
 
 		for mu in mu_list:
 			logger.print2("\nWorking on %s"%mu)
@@ -161,7 +161,59 @@ def transplant_event_layer(event_lyr,clean02_inv_gdb,output_ARAR_gdb,mu_list,par
 			app_out = arcpy.management.Append(inputs=last_fc, target=out_fc_path1, schema_type="NO_TEST")
 			append_count = int(app_out.getOutput("appended_row_count"))
 			logger.print2("\t\tAppended %s records"%append_count)
-			logger.print2("\t\tDone")
+
+			# repair geometry
+			logger.print2("\tRepairing Geometry (method = OGC)")
+			arcpy.management.RepairGeometry(in_features=out_fc_path1,delete_null="DELETE_NULL",validation_method="OGC")
+			logger.print2("\tDone!!")
+
+
+
+	# step D eliminate
+	step = 'd'
+	last_ds = ds
+	ds = os.path.join(output_gdb,step)
+	d1_fc_suffix = "_%s_m2s"%step
+	d2_fc_suffix = ""
+	if 'D' in step_list:
+		logger.print2("\n\n#########   Step D. Multi to Single & Eliminate Small Polygons  ##########\n")
+		logger.print2("Making a new Feature dataset: %s"%step)
+		arcpy.Delete_management(os.path.join(output_gdb,step))
+		arcpy.CreateFeatureDataset_management(output_gdb, step, projfile)
+
+		for mu in mu_list:
+			logger.print2("\nWorking on %s"%mu)
+			last_fc = os.path.join(last_ds,"%s%s"%(mu,c1_fc_suffix))
+			out_fc_path1 = os.path.join(ds,"%s%s"%(mu,d1_fc_suffix))
+			out_fc_path2 = os.path.join(ds,"%s%s"%(mu,d2_fc_suffix))
+
+			logger.print2("\tRunning Multipart to Single Part on %s"%mu)
+			arcpy.management.MultipartToSinglepart(in_features=last_fc,out_feature_class=out_fc_path1)
+			logger.print2("\t\tDone!!")
+
+
+			# erase from original inv
+			logger.print2("\tEliminating where %s"%elim_select)
+			orig_count = int(arcpy.GetCount_management(out_fc_path1)[0])
+			arcpy.MakeFeatureLayer_management(out_fc_path1, "elimlayer1")
+			arcpy.SelectLayerByAttribute_management("elimlayer1", "NEW_SELECTION",elim_select)
+			select_count = int(arcpy.GetCount_management("elimlayer1")[0])
+			if select_count > 0:
+				logger.print2("\t\tSelected %s records"%select_count)
+				arcpy.management.Eliminate(in_features="elimlayer1",out_feature_class=out_fc_path2,selection="AREA",ex_where_clause="")
+				new_count = int(arcpy.GetCount_management(out_fc_path2)[0])
+				elim_percent = round((((orig_count - new_count) / orig_count) * 100),2)
+				logger.print2("\t\tEliminated %s of %s (%s%%)"%(orig_count - new_count,orig_count,elim_percent))
+			else:
+				logger.print2("\t\tNothing to eliminate. Just copying the data over")
+				arcpy.CopyFeatures_management(in_features="elimlayer1",out_feature_class=out_fc_path2)
+
+			# repair geometry
+			logger.print2("\tRepairing Geometry (method = OGC)")
+			arcpy.management.RepairGeometry(in_features=out_fc_path2,delete_null="DELETE_NULL",validation_method="OGC")
+			logger.print2("\tDone!!")
+
+
 
 
 
@@ -172,7 +224,7 @@ if __name__ == '__main__':
 	# gather inputs
 	event_lyr = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\EventLayer.gdb\NEO4\NEO_fin' # path to cleaner 03 output feature class (NEO_fin)
 	clean02_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\InvCleaner01_fin.gdb' # path to cleaner 02 output gdb
-	output_ARAR_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\Transplant_event.gdb' # output gdb must already exist.
+	output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\Transplant_event.gdb' # output gdb must already exist.
 
 	# mu_list values must be identical to the feature class names within PIAM.gdb (upper/lower case doesn't matter)
 	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
@@ -183,7 +235,7 @@ if __name__ == '__main__':
 			'FarNorth_NorthCentral', 'FarNorth_Northeast', 'FarNorth_Northwest', 'FarNorth_Taash',
 			'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
 			'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa']
-	# mu_list = ['Lake_Superior_Islands', 'Lake_Nipigon_Islands'] # testing
+	# mu_list = ['FC360'] # testing
 
 	para = {
 	'clean_inv_suffix': '_g_standardfield', # this must match with the final fc name suffic of step G of 02_standardize_using_template.py
@@ -191,15 +243,15 @@ if __name__ == '__main__':
 	}
 
 	step_list = 'ALL'
-	# step_list = ['B','C']
+	step_list = ['D'] # comment this out if you want to run ALL
 
 	if step_list == 'ALL':
-		step_list = ['A','B','C']
+		step_list = ['A','B','C','D']
 
 
 	######### logfile stuff
 
-	tool_shortname = 'Transplant_Event_Layer' # the output logfile will include this text in its filename.
+	tool_shortname = '04Transplant_Event_Layer' # the output logfile will include this text in its filename.
 
 	# importing libraries (only works if arclog.py file is located on the parent folder of this script)
 	from datetime import datetime
@@ -209,10 +261,10 @@ if __name__ == '__main__':
 	import common_func
 
 	# find full path where the logfile will be written
-	folder_path = arcpy.Describe(output_ARAR_gdb).path
+	folder_path = arcpy.Describe(output_gdb).path
 	while arcpy.Describe(folder_path).dataType != 'Folder':
 		folder_path = os.path.split(folder_path)[0]
-	outfile = os.path.split(output_ARAR_gdb)[1] + '_' + tool_shortname + '-LOG_' + datetime.now().strftime('%Y%m%d_%H%M') + '.txt'
+	outfile = os.path.split(output_gdb)[1] + '_' + tool_shortname + '-LOG_' + datetime.now().strftime('%Y%m%d_%H%M') + '.txt'
 	logfile_path = os.path.join(folder_path,outfile)
 
 	# importing arclog in the parent directory
@@ -221,7 +273,7 @@ if __name__ == '__main__':
 	##########
 
 	# run the main function(s)
-	transplant_event_layer(event_lyr,clean02_inv_gdb,output_ARAR_gdb,mu_list,para,step_list)
+	transplant_event_layer(event_lyr,clean02_inv_gdb,output_gdb,mu_list,para,step_list)
 
 	# finish writing the logfile
 	logger.log_close()
