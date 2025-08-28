@@ -348,7 +348,7 @@ if __name__ == '__main__':
 	# gather inputs
 	input_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\Transplant_event.gdb' # output gdb must already exist and should contain feature classes in mu_list
 	output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\a05_clean_up_tabular.gdb' # must already exists. This is test
-	# output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_base.gdb' # must already exists. This is final
+	output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_base.gdb' # must already exists. This is final
 	current_year = 2025
 
 	# mu_list values must be identical to the feature class names within PIAM.gdb (upper/lower case doesn't matter)
@@ -360,7 +360,7 @@ if __name__ == '__main__':
 			'FarNorth_NorthCentral', 'FarNorth_Northeast', 'FarNorth_Northwest', 'FarNorth_Taash',
 			'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
 			'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa']
-	mu_list = ['FC680','FC443','Lake_Superior_Islands'] # testing
+	# mu_list = ['FC680','FC443','Lake_Superior_Islands'] # testing
 
 	fix_list ={
 	# fix item | Description 					| parameters if any
@@ -374,18 +374,19 @@ if __name__ == '__main__':
 	'SOURCE': ["SOURCE values will be recategorized, cleaned and capitalized."],
 	'DEPTYPE': ["DEPTYPE should be NULL for non FOR polygons, and shouldn't be NULL,'', nor '-' for FOR polygons. DEPTYPE should be HARVEST when DEVSTAGE=DEPHARV"],
 	'DEVSTAGE': ["DEVSTAGE should be NULL for non FOR polygons. DEVSTAGE of FTG~ should be changed to EST~"],
-	'OWNER': ["Owner values are no longer numbers. Updating this to 2024 tech spec. Keeping the old OWNER value under ORIG_OWNER field."],
+	'OWNER': ["Owner values are no longer numbers. Updating this to 2025 tech spec. Keeping the old OWNER value under ORIG_OWNER field."],
 	'NEXTSTG': ["Cleaning up NEXTSTG. CONVENT is now STANDARDS"],
 	'MGMTCON1': ["Cleaning up MGMTCON1. When POLYTYPE isn't FOR, it should be ISLD or NULL. When FOR, it should follow the coding scheme"],
 	}
 
 	# VERT and other OLT fields...
+	# clean up YIELD field
 	# ARI_ID
 	# AGE CLASS fields (add it at the next script)
 
 	# step A is prep (copying over so this script doesn't overwrite the original. step B is fixing what's on the fix_list
 	step_list = 'ALL'
-	# step_list = ['B']
+	step_list = ['B']
 
 	if step_list == 'ALL':
 		step_list = ['A','B']
