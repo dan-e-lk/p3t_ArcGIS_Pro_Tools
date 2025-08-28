@@ -3,8 +3,13 @@
 #   as long as the feature classes are named the same way (eg. FC421, Lake_Superior_Islands, etc.) and mandatory fields exists.
 #   mandatory fields are those in field_types dictionary of a02_standardize_using_template.py script
 
-# POLYID must be unique values
-# 
+owner_crosswalk ={ # in the order of most occurring to least
+	'CROWN':['1'],
+	'PATENT':['3','4','8'],
+	'PARKS':['5','7'],
+	'FN':['6'],
+	'PATCRN':['2'],
+	'FEDRES':['9']}
 
 
 import arcpy
@@ -20,7 +25,7 @@ projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert
 def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,step_list):
 
 	# step A
-	step = 'clean_attr'
+	step = 'all_%s'%current_year
 	ds = os.path.join(output_inv_gdb,step) # eg. .../AnalysisReadyInventory.gdb/a/
 	a1_fc_suffix = ''
 	if 'A' in step_list:
@@ -37,12 +42,19 @@ def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,
 
 			logger.print2("\tCopying over the data from %s"%os.path.split(input_inv_gdb)[1])
 			arcpy.CopyFeatures_management(in_features=mu,out_feature_class=out_fc_path)
+			fields = [str(f.name).upper() for f in arcpy.ListFields(out_fc_path)] # all the fields, uppercase
 
 			# select from event layer where INV_NAME = inventory fc name, then intersect
-			logger.print2("\tAdding Fields (ORG_POLYID and T_CHANGE)")
+			logger.print2("\tAdding Fields (ORG_POLYID and ORG_OWNER)")
 			arcpy.AddField_management(in_table = out_fc_path, field_name = 'ORG_POLYID', field_type = "TEXT", field_length = "35")
-			arcpy.AddField_management(in_table = out_fc_path, field_name = 'T_CHANGE', field_type = "TEXT", field_length = "255")
+			arcpy.AddField_management(in_table = out_fc_path, field_name = 'ORG_OWNER', field_type = "TEXT", field_length = "5")
+			# arcpy.AddField_management(in_table = out_fc_path, field_name = 'T_CHANGE', field_type = "TEXT", field_length = "255")
 			logger.print2("\tDone!!")
+
+			# temporarily add delete HORIZ field script here
+			if 'HORIZ' in fields:
+				logger.print2("\tDeleting Field: HORIZ")
+				arcpy.management.DeleteField(out_fc_path,'HORIZ')
 
 
 	# step B
@@ -68,6 +80,17 @@ def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,
 						new_polyid = row[0]
 						row[2] = org_polyid
 						row[1] = new_polyid
+						cursor.updateRow(row)
+
+			# work on HA
+			i = 'HA' # i stands for current item
+			if i in fix_item_list:
+				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
+				f = ['SHAPE_AREA','HA']
+				with arcpy.da.UpdateCursor(fcname, f) as cursor:
+					for row in cursor:
+						ha = round(row[0]/10000,3)
+						row[1] = ha
 						cursor.updateRow(row)
 
 			# # work on POLYTYPE
@@ -244,10 +267,79 @@ def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,
 				if counter > 0:
 					logger.print2("\t\tFixed %s records"%counter)
 
-			# work on OWNER
+			# work on OWNER (if OWNER IS NULL, I can't fix it automatically here)
+			i = 'OWNER' # i stands for current item
+			if i in fix_item_list:
+				null_count = 0
+				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
+				f = ['OWNER','ORG_OWNER']
+				with arcpy.da.UpdateCursor(fcname, f) as cursor:
+					for row in cursor:
+						orig_owner = row[0]
+						owner = orig_owner
+						if orig_owner == None:
+							owner = None
+							null_count += 1
+						else:
+							for new_code, old_code in owner_crosswalk.items():
+								if orig_owner in old_code:
+									owner = new_code
+									row[1] = orig_owner
+									break
+						row[0] = owner
+						cursor.updateRow(row)
+				if null_count > 0:
+					logger.print2("\t\tThere are %s records where OWNER is NULL. (fix this manually)"%null_count)
 
+			# work on NEXTSTG
+			i = 'NEXTSTG' # i stands for current item
+			if i in fix_item_list:
+				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
+				counter = 0				
+				f = ['NEXTSTG']
+				sql = "POLYTYPE = 'FOR'"
+				with arcpy.da.UpdateCursor(fcname, f, sql) as cursor:
+					for row in cursor:
+						orig_nextstg = row[0].upper().strip() if row[0] != None else None
+						nextstg = orig_nextstg # by default
+						if orig_nextstg != None:
+							if orig_nextstg in ['CLEARCUT','CONVENT','CONVENTN']:
+								counter += 1
+								nextstg = 'STANDARDS'
+							elif orig_nextstg in ['','FTG','NA','SNGLTREE']:
+								counter += 1
+								nextstg = None
+							elif orig_nextstg == 'BLKSTRIP':
+								counter += 1
+								nextstg = 'BLOCKSTRIP'
+						row[0] = nextstg
+						cursor.updateRow(row)
+				if counter > 0:
+					logger.print2("\t\tFixed %s records"%counter)
 
-
+			# work on MGMTCON1
+			i = 'MGMTCON1' # i stands for current item
+			if i in fix_item_list:
+				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
+				counter = 0				
+				f = ['MGMTCON1','POLYTYPE']
+				with arcpy.da.UpdateCursor(fcname, f, sql) as cursor:
+					for row in cursor:
+						orig_mgmtcon = row[0].upper().strip() if row[0] != None else None
+						polytype = row[1]
+						mgmtcon = orig_mgmtcon # by default
+						if polytype != 'FOR':
+							if orig_mgmtcon not in [None,'ISLD']:
+								counter += 1
+								mgmtcon = None
+						elif polytype == 'FOR':
+							if orig_mgmtcon in [None,'NON','UPFR','U_PF']:
+								counter += 1
+								mgmtcon = 'NONE'
+						row[0] = mgmtcon
+						cursor.updateRow(row)
+				if counter > 0:
+					logger.print2("\t\tFixed %s records"%counter)
 
 
 
@@ -255,7 +347,8 @@ if __name__ == '__main__':
 	
 	# gather inputs
 	input_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\Transplant_event.gdb' # output gdb must already exist and should contain feature classes in mu_list
-	output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\a05_clean_up_tabular.gdb' # must already exists
+	output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\a05_clean_up_tabular.gdb' # must already exists. This is test
+	# output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_base.gdb' # must already exists. This is final
 	current_year = 2025
 
 	# mu_list values must be identical to the feature class names within PIAM.gdb (upper/lower case doesn't matter)
@@ -271,8 +364,9 @@ if __name__ == '__main__':
 
 	fix_list ={
 	# fix item | Description 					| parameters if any
-	# 'POLYID':	["POLYID values must be unique. Keep the original POLYID values in ORG_POLYID and repopulate POLYID with OBJECTID."], # don't do this - if POLYTYPE is NULL, figure out what polytype it is (likely WAT)
-	'POLYTYPE':	["POLYTYPE must not be null. If NULL, check SPCOMP and AGE. If both populated, POLYTYPE='FOR' else 'UCL'"],
+	'POLYID':	["POLYID values must be unique. Keep the original POLYID values in ORG_POLYID and repopulate POLYID with OBJECTID."], 
+	'HA': ["Recalculating HA field"],
+	# 'POLYTYPE':	["POLYTYPE must not be null. If NULL, check SPCOMP and AGE. If both populated, POLYTYPE='FOR' else 'UCL'"], # don't do this - if POLYTYPE is NULL, figure out what polytype it is (likely WAT)
 	'SPCOMP_fix':	["FC175 has SPCOMP of 'Bf' and FC443 has SPCOMP of 'g'. Fixing these..."],
 	'SPCOMP_upper':	["Turn all SPCOMP and LEADSPC values to upper character"],
 	'YEAR_fields':	["YRDEP and YRORG values should be null when POLYTYPE<>FOR. YRORG should be greater than 1600 when POLYTYPE=FOR"],
@@ -280,14 +374,18 @@ if __name__ == '__main__':
 	'SOURCE': ["SOURCE values will be recategorized, cleaned and capitalized."],
 	'DEPTYPE': ["DEPTYPE should be NULL for non FOR polygons, and shouldn't be NULL,'', nor '-' for FOR polygons. DEPTYPE should be HARVEST when DEVSTAGE=DEPHARV"],
 	'DEVSTAGE': ["DEVSTAGE should be NULL for non FOR polygons. DEVSTAGE of FTG~ should be changed to EST~"],
-	'OWNER': ["Owner values are no longer numbers. Updating this to 2024 tech spec."],
-
-	'HA': ["Recalculating HA field"],
+	'OWNER': ["Owner values are no longer numbers. Updating this to 2024 tech spec. Keeping the old OWNER value under ORIG_OWNER field."],
+	'NEXTSTG': ["Cleaning up NEXTSTG. CONVENT is now STANDARDS"],
+	'MGMTCON1': ["Cleaning up MGMTCON1. When POLYTYPE isn't FOR, it should be ISLD or NULL. When FOR, it should follow the coding scheme"],
 	}
+
+	# VERT and other OLT fields...
+	# ARI_ID
+	# AGE CLASS fields (add it at the next script)
 
 	# step A is prep (copying over so this script doesn't overwrite the original. step B is fixing what's on the fix_list
 	step_list = 'ALL'
-	step_list = ['B']
+	# step_list = ['B']
 
 	if step_list == 'ALL':
 		step_list = ['A','B']

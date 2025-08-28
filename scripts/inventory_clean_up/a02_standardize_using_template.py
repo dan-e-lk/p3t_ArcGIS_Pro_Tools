@@ -18,7 +18,7 @@ field_types = {
 	'DEPTYPE': ['String'],
 	'INCIDSPC': ['String'],
 	'VERT': ['String'],
-	'HORIZ': ['String'],
+	# 'HORIZ': ['String'], # removed in 2025
 	'PRI_ECO': ['String'],
 	'ACCESS1': ['String'],
 	'MGMTCON1': ['String'],
