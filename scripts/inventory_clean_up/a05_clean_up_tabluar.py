@@ -17,6 +17,11 @@ import os, csv
 from a02_standardize_using_template import field_types as invfields_dict
 invfields = list(invfields_dict.keys())
 
+# this one is only for romeo (930)
+from Ecosite_crosswalk_dict import NER_Ecosites
+eco_crosswalk = {oldcode:newcode[0] for oldcode, newcode in NER_Ecosites.items() if newcode[0] != ''}
+
+
 arcpy.env.overwriteOutput = True
 arcpy.env.XYTolerance = "0.01 Meters" # by default, it is 0.001 meters, which can generate 1mm-wide overlaps and gaps. So 0.01m is preferred.
 projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj") # this works for all scripts that are one folder level deep. eg. scripts/sqlite/script.py
@@ -74,12 +79,23 @@ def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,
 			if i in fix_item_list:
 				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
 				f = ['OID@','POLYID','ORG_POLYID']
-				with arcpy.da.UpdateCursor(fcname, f) as cursor:
+				sql = "ORG_POLYID IS NULL" # this way, we won't overwrite ORG_POLYID
+				with arcpy.da.UpdateCursor(fcname, f, sql) as cursor:
 					for row in cursor:
 						org_polyid = row[1]
 						new_polyid = row[0]
 						row[2] = org_polyid
 						row[1] = new_polyid
+						cursor.updateRow(row)
+
+			# work on ARI_ID
+			i = 'ARI_ID' # i stands for current item
+			if i in fix_item_list:
+				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
+				f = ['OID@','ARI_ID']
+				with arcpy.da.UpdateCursor(fcname, f) as cursor:
+					for row in cursor:
+						row[1] = row[0]
 						cursor.updateRow(row)
 
 			# work on HA
@@ -92,26 +108,6 @@ def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,
 						ha = round(row[0]/10000,3)
 						row[1] = ha
 						cursor.updateRow(row)
-
-			# # work on POLYTYPE
-			# i = 'POLYTYPE' # i stands for current item
-			# if i in fix_item_list:
-			# 	logger.print2("\t%s: %s"%(i,fix_list[i][0]))
-			# 	counter = 0
-			# 	f = ['POLYTYPE','SPCOMP','AGE']
-			# 	sql = "POLYTYPE IS NULL OR POLYTYPE NOT IN ('WAT','DAL','GRS','ISL','UCL','BSH','RCK','TMS','OMS','FOR')"
-			# 	with arcpy.da.UpdateCursor(fcname, f, sql) as cursor:
-			# 		for row in cursor:
-			# 			counter += 1
-			# 			spcomp = row[1]
-			# 			age = row[0]
-			# 			if spcomp not in [None,''] and age not in [None,'']:
-			# 				row[0] = 'FOR'
-			# 			else:
-			# 				row[0] = 'UCL'
-			# 			cursor.updateRow(row)
-			# 	if counter > 0:
-			# 		logger.print2("\tFixed %s records"%counter)
 
 			# work on SPCOMP-fix
 			i = 'SPCOMP_fix' # i stands for current item
@@ -255,6 +251,7 @@ def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,
 						polytype = row[0]
 						deptype = row[1]
 						orig_devstage = row[2].upper().strip() if row[2] != None else None
+						devstage = orig_devstage
 						if polytype != 'FOR' and orig_devstage != None:
 							devstage = None
 						elif polytype == 'FOR' and orig_devstage.startswith('FTG'):
@@ -323,7 +320,7 @@ def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,
 				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
 				counter = 0				
 				f = ['MGMTCON1','POLYTYPE']
-				with arcpy.da.UpdateCursor(fcname, f, sql) as cursor:
+				with arcpy.da.UpdateCursor(fcname, f) as cursor:
 					for row in cursor:
 						orig_mgmtcon = row[0].upper().strip() if row[0] != None else None
 						polytype = row[1]
@@ -341,14 +338,83 @@ def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,
 				if counter > 0:
 					logger.print2("\t\tFixed %s records"%counter)
 
+			# work on YIELD_fix1
+			i = 'YIELD_fix1' # i stands for current item
+			if i in fix_item_list:
+				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
+				f = ['YIELD']
+				sql = "POLYTYPE = 'FOR' AND YIELD IS NOT NULL"
+				with arcpy.da.UpdateCursor(fcname, f, sql) as cursor:
+					for row in cursor:
+						orig_yield = row[0].upper().strip()
+						y = orig_yield
+						if orig_yield.startswith('PRS') or orig_yield.startswith('PRES'):
+							y = 'PRSNT'
+						elif orig_yield.startswith('NAT'):
+							y = 'NATORIG'
+						row[0] = y
+						cursor.updateRow(row)
 
+			# work on YIELD_fix2
+			i = 'YIELD_fix2' # i stands for current item
+			if i in fix_item_list:
+				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
+				f = ['YIELD','DEVSTAGE']
+				sql = "POLYTYPE = 'FOR'"
+				with arcpy.da.UpdateCursor(fcname, f, sql) as cursor:
+					for row in cursor:
+						orig_yield2 = row[0].upper().strip() if row[0] != None else None
+						devstage = row[1]
+						y2 = orig_yield2
+						if orig_yield2 in [None,'NA','NONE',''] and devstage.endswith('NAT'):
+							y2 = 'PRSNT'
+						row[0] = y2
+						cursor.updateRow(row)
+
+			# work on ESTDTREE fix
+			i = 'ESTDTREE' # i stands for current item
+			if i in fix_item_list:
+				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
+				f = ['DEVSTAGE']
+				sql = "DEVSTAGE = 'ESTDTREE'"
+				with arcpy.da.UpdateCursor(fcname, f, sql) as cursor:
+					for row in cursor:
+						devstage = row[0]
+						if devstage == 'ESTDTREE':
+							row[0] = 'ESTNAT'
+						cursor.updateRow(row)
+
+			# work on Romeo_PRI_ECO
+			i = 'Romeo_PRI_ECO' # i stands for current item
+			if fcname == 'FC930' and i in fix_item_list:
+				logger.print2("\t%s: %s"%(i,fix_list[i][0]))
+				arcpy.AddField_management(in_table = fcname, field_name = 'ORG_ECO', field_type = "TEXT", field_length = "12")
+				f = ['PRI_ECO','ORG_ECO']
+				sql = "PRI_ECO IS NOT NULL AND ORG_ECO IS NULL"
+				with arcpy.da.UpdateCursor(fcname, f, sql) as cursor:
+					for row in cursor:
+						org_eco = row[0] # eg. 'NE13p'
+						new_eco = 'B000'
+						if len(org_eco) > 2:
+							try:
+								old_code = org_eco[2:].lower() # eg. '13p'
+								new_eco = eco_crosswalk[old_code]
+							except:
+								pass
+						row[1] = org_eco
+						row[0] = new_eco
+						cursor.updateRow(row)
 
 if __name__ == '__main__':
 	
+	testing = True
+
 	# gather inputs
 	input_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\Transplant_event.gdb' # output gdb must already exist and should contain feature classes in mu_list
-	output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\a05_clean_up_tabular.gdb' # must already exists. This is test
 	output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_base.gdb' # must already exists. This is final
+	if testing:
+		output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\a05_clean_up_tabular.gdb' # must already exists. This is test		
+
 	current_year = 2025
 
 	# mu_list values must be identical to the feature class names within PIAM.gdb (upper/lower case doesn't matter)
@@ -360,39 +426,37 @@ if __name__ == '__main__':
 			'FarNorth_NorthCentral', 'FarNorth_Northeast', 'FarNorth_Northwest', 'FarNorth_Taash',
 			'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
 			'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa']
-	# mu_list = ['FC680','FC443','Lake_Superior_Islands'] # testing
+	if testing:
+		mu_list = ['FC754','FC930'] # testing
 
 	fix_list ={
 	# fix item | Description 					| parameters if any
-	'POLYID':	["POLYID values must be unique. Keep the original POLYID values in ORG_POLYID and repopulate POLYID with OBJECTID."], 
-	'HA': ["Recalculating HA field"],
-	# 'POLYTYPE':	["POLYTYPE must not be null. If NULL, check SPCOMP and AGE. If both populated, POLYTYPE='FOR' else 'UCL'"], # don't do this - if POLYTYPE is NULL, figure out what polytype it is (likely WAT)
+	'POLYID':	["POLYID values must be unique. Keep the original POLYID values in ORG_POLYID and repopulate POLYID with OBJECTID."],
+	'ARI_ID':	["Repopulate ARI_ID with OBJECTID (ARI_ID won't change after this step)"],
+	'HA': 		["Recalculating HA field"],
 	'SPCOMP_fix':	["FC175 has SPCOMP of 'Bf' and FC443 has SPCOMP of 'g'. Fixing these..."],
 	'SPCOMP_upper':	["Turn all SPCOMP and LEADSPC values to upper character"],
 	'YEAR_fields':	["YRDEP and YRORG values should be null when POLYTYPE<>FOR. YRORG should be greater than 1600 when POLYTYPE=FOR"],
-	'AGE': ["AGE will be recalculated based on YRORG and will be capped at 255",255], # do this after fixing YRORG
-	'SOURCE': ["SOURCE values will be recategorized, cleaned and capitalized."],
-	'DEPTYPE': ["DEPTYPE should be NULL for non FOR polygons, and shouldn't be NULL,'', nor '-' for FOR polygons. DEPTYPE should be HARVEST when DEVSTAGE=DEPHARV"],
+	'AGE': 		["AGE will be recalculated based on YRORG and will be capped at 255",255], # do this after fixing YRORG
+	'SOURCE': 	["SOURCE values will be recategorized, cleaned and capitalized."],
+	'DEPTYPE': 	["DEPTYPE should be NULL for non FOR polygons, and shouldn't be NULL,'', nor '-' for FOR polygons. DEPTYPE should be HARVEST when DEVSTAGE=DEPHARV"],
 	'DEVSTAGE': ["DEVSTAGE should be NULL for non FOR polygons. DEVSTAGE of FTG~ should be changed to EST~"],
-	'OWNER': ["Owner values are no longer numbers. Updating this to 2025 tech spec. Keeping the old OWNER value under ORIG_OWNER field."],
-	'NEXTSTG': ["Cleaning up NEXTSTG. CONVENT is now STANDARDS"],
+	'OWNER': 	["Owner values are no longer numbers. Updating this to 2025 tech spec. Keeping the old OWNER value under ORIG_OWNER field."],
+	'NEXTSTG': 	["Cleaning up NEXTSTG. CONVENT is now STANDARDS"],
 	'MGMTCON1': ["Cleaning up MGMTCON1. When POLYTYPE isn't FOR, it should be ISLD or NULL. When FOR, it should follow the coding scheme"],
+	'YIELD_fix1': ["Turn them all uppercase. If it starts with PRS or PRES, make it PRSNT. If it starts with NAT, then make it NATORIG"],
+	'YIELD_fix2': ["If YIELD is NULL or 'NONE' or 'NA' or '', and if DEVSTAGE ends with 'NAT', make it PRSNT "],
+	'Romeo_PRI_ECO': ["Only applies to Romeo (930). Add a new field called ORG_ECO. Save original PRI_ECO value there and repopulate PRI_ECO"],
+	'ESTDTREE': ["This is a one-off edit I need to make because of the error I made in a03 script. Turns DEVSTAGE's ESTDTREE to ESTNAT"],
 	}
 
-	# VERT and other OLT fields...
-	# clean up YIELD field
-	# ARI_ID
-	# AGE CLASS fields (add it at the next script)
+	# LEADSPC and checking SPCOMP - hmm... this is a bit more complex (add it later)
+	# AGE CLASS fields (add it in the next script)
 
 	# step A is prep (copying over so this script doesn't overwrite the original. step B is fixing what's on the fix_list
-	step_list = 'ALL'
-	step_list = ['B']
-
-	if step_list == 'ALL':
-		step_list = ['A','B']
-
-
-
+	step_list = ['A','B']
+	if testing:
+		step_list = ['B']
 
 	######### logfile stuff
 

@@ -689,10 +689,13 @@ def make_event_layer(in_arar_gdb, in_natdist_gdb, out_event_gdb, boundary_fc, ti
 				# case 5: HRV + EST (missing RGN? we assume it was natural regen)
 				elif hrv_dev != None and rgn_dev == None and est_dev != None:
 					devstage = 'ESTNAT'
-				# case 6: RGN + EST (or when all 3 exists) (RGN will be either NEWNAT, NEWPLANT, NEWSEED)
+				# case 6: RGN + EST (or when all 3 exists) (use RGN's devstage value only if it is NEWNAT, NEWPLANT, or NEWSEED)
 				elif rgn_dev != None and est_dev != None:
-					rgn_type = rgn_dev [3:] # NAT, PLANT, or SEED
-					devstage = "EST%s"%rgn_type # ESTNAT, ESTPLANT, or ESTSEED
+					if rgn_dev in ['NEWNAT','NEWPLANT','NEWSEED']:
+						rgn_type = rgn_dev [3:] # NAT, PLANT, or SEED
+						devstage = "EST%s"%rgn_type # ESTNAT, ESTPLANT, or ESTSEED
+					else:
+						devstage = 'ESTNAT'
 				row[f.index('AR_DEVSTAGE')] = devstage
 				# also update YRSOURCE if we are using rgn_dev and if RGN_YRSOURCE is the latest
 				if devstage == rgn_dev:
