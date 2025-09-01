@@ -189,8 +189,9 @@ def transplant_event_layer(event_lyr,clean02_inv_gdb,output_gdb,mu_list,para,ste
 
 			logger.print2("\tRunning Multipart to Single Part on %s"%mu)
 			arcpy.management.MultipartToSinglepart(in_features=last_fc,out_feature_class=out_fc_path1)
-			logger.print2("\t\tDone!!")
-
+			# deleting ORIG_FID field that was created during this process
+			logger.print2("\t\tDeleting ORIG_FID field created by Multipart tool")
+			arcpy.management.DeleteField(out_fc_path,["ORIG_FID"])
 
 			# erase from original inv
 			logger.print2("\tEliminating where %s"%elim_select)

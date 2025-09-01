@@ -1,4 +1,4 @@
-# work in progress...
+# complete!
 # this script is ideally run on inventories after 04_transplant_event_layer.py, but should be able to run on any existing inventories
 #   as long as the feature classes are named the same way (eg. FC421, Lake_Superior_Islands, etc.) and mandatory fields exists.
 #   mandatory fields are those in field_types dictionary of a02_standardize_using_template.py script
@@ -56,10 +56,12 @@ def clean_up_tabular(input_inv_gdb,output_inv_gdb,mu_list,current_year,fix_list,
 			# arcpy.AddField_management(in_table = out_fc_path, field_name = 'T_CHANGE', field_type = "TEXT", field_length = "255")
 			logger.print2("\tDone!!")
 
-			# temporarily add delete HORIZ field script here
-			if 'HORIZ' in fields:
-				logger.print2("\tDeleting Field: HORIZ")
-				arcpy.management.DeleteField(out_fc_path,'HORIZ')
+			# temporarily add delete HORIZ and ORIG_FID field script here (this shouldn't exist in the future because I cleaned them up in previous script)
+			temp_delete = ['HORIZ','ORIG_FID']
+			for delete_f in temp_delete:
+				if delete_f in fields:
+					logger.print2("\tDeleting Field: %s"%delete_f)
+					arcpy.management.DeleteField(out_fc_path,delete_f)
 
 
 	# step B
