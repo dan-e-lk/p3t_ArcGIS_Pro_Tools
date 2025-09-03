@@ -207,7 +207,7 @@ def transplant_event_layer(event_lyr,clean02_inv_gdb,output_gdb,mu_list,para,ste
 				logger.print2("\t\tEliminated %s of %s (%s%%)"%(orig_count - new_count,orig_count,elim_percent))
 			else:
 				logger.print2("\t\tNothing to eliminate. Just copying the data over")
-				arcpy.CopyFeatures_management(in_features="elimlayer1",out_feature_class=out_fc_path2)
+				arcpy.CopyFeatures_management(in_features=out_fc_path1,out_feature_class=out_fc_path2)
 
 			# repair geometry
 			logger.print2("\tRepairing Geometry (method = OGC)")
@@ -226,6 +226,7 @@ if __name__ == '__main__':
 	event_lyr = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\EventLayer.gdb\NEO4\NEO_fin' # path to cleaner 03 output feature class (NEO_fin)
 	clean02_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\InvCleaner01_fin.gdb' # path to cleaner 02 output gdb
 	output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\Transplant_event.gdb' # output gdb must already exist.
+	# output_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\Test\a04_Park_Eagle.gdb' # output gdb must already exist.
 
 	# mu_list values must be identical to the feature class names within PIAM.gdb (upper/lower case doesn't matter)
 	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
@@ -236,7 +237,7 @@ if __name__ == '__main__':
 			'FarNorth_NorthCentral', 'FarNorth_Northeast', 'FarNorth_Northwest', 'FarNorth_Taash',
 			'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
 			'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa']
-	# mu_list = ['FC360'] # testing
+	# mu_list = ['Park_EagleSnowshoe'] # testing
 
 	para = {
 	'clean_inv_suffix': '_g_standardfield', # this must match with the final fc name suffic of step G of 02_standardize_using_template.py

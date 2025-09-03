@@ -202,7 +202,7 @@ def clean_inv(original_inv_gdb,output_gdb,boundary_fc,para,mu_list,step_list):
 				logger.print2("\tEliminated %s of %s (%s%%)"%(orig_count - new_count,orig_count,elim_percent))
 			else:
 				logger.print2("\t\tNothing to eliminate. Just copying the data over")
-				arcpy.CopyFeatures_management(in_features="elimlayer1",out_feature_class=new_fc_name)	
+				arcpy.CopyFeatures_management(in_features=stepD_fcs[mu],out_feature_class=new_fc_name)	
 
 			# repair geometry
 			logger.print2("\tRepairing Geometry (method = OGC)")

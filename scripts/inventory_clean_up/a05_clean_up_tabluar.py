@@ -1,4 +1,5 @@
 # complete!
+# Output of this tool is the ARI_base!
 # this script is ideally run on inventories after 04_transplant_event_layer.py, but should be able to run on any existing inventories
 #   as long as the feature classes are named the same way (eg. FC421, Lake_Superior_Islands, etc.) and mandatory fields exists.
 #   mandatory fields are those in field_types dictionary of a02_standardize_using_template.py script
@@ -416,6 +417,7 @@ if __name__ == '__main__':
 	output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_base.gdb' # must already exists. This is final
 	if testing:
 		output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\a05_clean_up_tabular.gdb' # must already exists. This is test		
+		output_inv_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\Test\a05_Park_Eagle.gdb' # must already exists. This is test		
 
 	current_year = 2025
 
@@ -429,7 +431,7 @@ if __name__ == '__main__':
 			'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
 			'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa']
 	if testing:
-		mu_list = ['FC754','FC930'] # testing
+		mu_list = ['Park_EagleSnowshoe'] # testing
 
 	fix_list ={
 	# fix item | Description 					| parameters if any
@@ -453,12 +455,12 @@ if __name__ == '__main__':
 	}
 
 	# LEADSPC and checking SPCOMP - hmm... this is a bit more complex (add it later)
-	# AGE CLASS fields (add it in the next script)
+
 
 	# step A is prep (copying over so this script doesn't overwrite the original. step B is fixing what's on the fix_list
 	step_list = ['A','B']
 	if testing:
-		step_list = ['B']
+		step_list = ['A','B']
 
 	######### logfile stuff
 

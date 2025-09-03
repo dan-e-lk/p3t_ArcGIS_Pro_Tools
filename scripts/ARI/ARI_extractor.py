@@ -4,6 +4,7 @@
 # or you want to grab just the OWNER = CROWN or POLYTYPE = FOR.
 # Do this using this script
 
+# ADD an option to make polyid unique again
 
 
 
@@ -15,7 +16,7 @@ arcpy.env.XYTolerance = "0.01 Meters" # by default, it is 0.001 meters, which ca
 projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj") # this works for all scripts that are one folder level deep. eg. scripts/sqlite/script.py
 
 
-def ari_extractor(ari_gdb,boundary_fc,f_to_keep,para):
+def ari_extractor(ari_gdb,boundary_fc,f_to_keep,repopulate_polyid,para):
 	# eg of para = {'out_gdb': out_gdb, 'out_fc_name': 'ARI_3W','mu_sql': "LG_REGION = '3W'", 'fc_sql': "POLYTYPE='FOR'"}
 	# unpack
 	out_gdb = para['out_gdb']
@@ -60,10 +61,24 @@ def ari_extractor(ari_gdb,boundary_fc,f_to_keep,para):
 		logger.print2("\tAppending %s to %s"%(mu, os.path.split(out_fc_path)[1]))
 		logger.print2("\t\tSelected %s"%fc_sql)
 		arcpy.MakeFeatureLayer_management(mu, "appendlayer1")
-		arcpy.SelectLayerByAttribute_management("appendlayer1", "NEW_SELECTION",fc_sql)
+		if fc_sql != None and len(fc_sql) > 0:
+			arcpy.SelectLayerByAttribute_management("appendlayer1", "NEW_SELECTION",fc_sql)
 		app_out = arcpy.management.Append(inputs="appendlayer1", target=out_fc_path, schema_type="NO_TEST")
 		append_count = int(app_out.getOutput("appended_row_count"))
 		logger.print2("\t\tAppended %s records"%append_count)
+
+
+	# repopulate POLYID
+	if repopulate_polyid:
+		fields = [str(f.name).upper() for f in arcpy.ListFields(out_fc_path)] # all the fields, uppercase
+		if 'POLYID' in fields:
+			logger.print2("\nRepopulating POLYID to make them unique again")
+			f = ['OID@','POLYID']
+			with arcpy.da.UpdateCursor(out_fc_path, f) as cursor:
+				for row in cursor:
+					new_polyid = row[0]
+					row[1] = new_polyid
+					cursor.updateRow(row)
 
 	logger.print2("\nDone!")
 
@@ -79,22 +94,27 @@ if __name__ == '__main__':
 	# f_to_keep. Only these fields will be appended. if you want all fields, then put f_to_keep = None
 	f_to_keep =['POLYID', 'POLYTYPE', 'OWNER', 'DEVSTAGE', 'YRDEP', 'DEPTYPE', 'PRI_ECO', 'YRORG', 'LEADSPC', 'SPCOMP', 'AGE', 'HT', 'CCLO', 'STKG', 'SC','VERT', 'MANAGED', 'PLANFU', 'AVAIL', 'SILVSYS', 'MUNO', 'ORG_OWNER']
 
-	out_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\indicators\ARI_BY_LGRegion.gdb' # this will be the output fc
-	
+	out_gdb = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - FRO\FRO2026\indicators\ARI_BY_LGRegion_ALL.gdb' # this will be the output fc
+
+	# option to repopulate POLYID (to keep it unique)
+	repopulate_polyid = True
+
 	# batch run using input_para
 	# mu_sql is run on boundary_fc to select fcs to append
 	# fc_sql is run on each fc to select a subset of the record. IMPORTANT: fields in this sql should be on the of the fields in f_to_keep
 	# keep_fields - only these fields will be kept in the end
+	# input_para =[
+	# {'out_gdb': out_gdb, 'out_fc_name': 'ARI_3W','mu_sql': "LG_REGION = '3W'", 'fc_sql': "POLYTYPE='FOR'"},
+	# ]
+
 	input_para =[
-	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_3W','mu_sql': "LG_REGION = '3W'", 'fc_sql': "POLYTYPE='FOR'"},
-	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_4W','mu_sql': "LG_REGION = '4W'", 'fc_sql': "POLYTYPE='FOR'"},
-	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_3S4S','mu_sql': "LG_REGION = '4S/3S'", 'fc_sql': "POLYTYPE='FOR'"},
-	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_3E','mu_sql': "LG_REGION = '3E'", 'fc_sql': "POLYTYPE='FOR'"},
-	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_4E5E','mu_sql': "LG_REGION in ('4E','5E')", 'fc_sql': "POLYTYPE='FOR'"},
+	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_3W','mu_sql': "LG_REGION = '3W'", 'fc_sql': ""},
+	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_4W','mu_sql': "LG_REGION = '4W'", 'fc_sql': ""},
+	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_3S4S','mu_sql': "LG_REGION = '4S/3S'", 'fc_sql': ""},
+	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_3E','mu_sql': "LG_REGION = '3E'", 'fc_sql': ""},
+	{'out_gdb': out_gdb, 'out_fc_name': 'ARI_4E5E','mu_sql': "LG_REGION in ('4E','5E')", 'fc_sql': ""},
 	]
 	
-	# add an option here to repopulate POLYID (to keep it unique)
-
 
 	######### logfile stuff
 
@@ -121,7 +141,7 @@ if __name__ == '__main__':
 
 	# run the main function(s)
 	for para in input_para:
-		ari_extractor(ari_gdb,boundary_fc,f_to_keep,para)
+		ari_extractor(ari_gdb,boundary_fc,f_to_keep,repopulate_polyid,para)
 
 	# finish writing the logfile
 	logger.log_close()
