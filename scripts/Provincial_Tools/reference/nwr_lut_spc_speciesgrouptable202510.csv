@@ -1,0 +1,44 @@
+sp,corr,grp2,grp3,grp4,u_indicator,desc,sp_f2024,desc_f2024,sci_f2024
+ax,ax,hwd,lh,ab,n,NA,AX,"ash, any/mixed",Fraxinus spp.
+ab,ab,hwd,lh,ab,n,NA,Ab,"ash, black",Fraxinus nigra
+bf,bf,con,bf,bf,uplnd,NA,Bf,"fir, balsam",Abies balsamea
+bw,bw,hwd,bw,bw,n,NA,Bw,"birch, white (or paper)",Betula papyrifera
+ce,cw,con,cw,cw,n,nw,CE,"cedar, all",Thuja spp.
+cr,cr,con,cw,cw,n,nw,Cr,"cedar, eastern red (redcedar)",Juniperus virginiana
+cw,cw,con,cw,cw,n,conv,NA,NA,NA
+la,la,con,la,la,n,NA,La,"larch, eastern (also called Tamarack or American Larch)",Larix laricina
+yb,yb,hwd,lh,lh,n,NA,Yb,"birch, yellow",Betula alleghaniensis
+ex,ex,hwd,lh,lh,n,NA,EX,"elm, any/mix.",Ulmus spp.
+ew,ew,hwd,lh,lh,n,NA,Ew,"elm, white (or American)",Ulmus americana
+by,yb,con,lh,lh,n,conv,NA,NA,NA
+oc,oc,con,oc,oc,n,??,OC,"conifers, other",------------
+he,he,con,oc,oc,n,nw,He,"hemlock, eastern",Tsuga canadensis
+pn,pn,con,oc,oc,n,??,Pn,"pine, Austrian or black",Pinus nigra
+ps,ps,con,oc,oc,uplnd,??,Ps,"pine, scots",Pinus sylvestris
+pb,pb,hwd,lh,pb,n,NA,Pb,"Poplar, balsam",Populus balsamifera
+pj,pj,con,pj,pj,uplnd,NA,Pj,"pine, jack",Pinus banksiana
+pr,pr,con,pr,pr,uplnd,NA,Pr,"pine, red",Pinus resinosa
+pl,pl,hwd,pt,pt,uplnd,NA,Pl,"Aspen, largetooth",Populus grandidentata
+pt,pt,hwd,pt,pt,uplnd,NA,Pt,"Aspen, trembling",Populus tremuloides
+po,pt,hwd,pt,pt,uplnd,nw,PO,"Poplar, any/mix",Populus spp.
+pw,pw,con,pw,pw,n,NA,Pw,"pine, white [eastern white]",Pinus strobus
+sx,sx,con,sb,sb,n,NA,SX,"spruce, any/mix",Picea spp.
+sb,sb,con,sb,sb,n,NA,Sb,"spruce, black",Picea mariana
+sr,sr,con,sw,sw,uplnd,nwr,Sr,"spruce, red",Picea rubens
+sw,sw,con,sw,sw,uplnd,NA,Sw,"spruce, white",Picea glauca
+aw,aw,hwd,uh,uh,n,NA,Aw,"ash, white",Fraxinus americana
+bd,bd,hwd,uh,uh,n,NA,Bd,Basswood,Tilia americana
+be,be,hwd,uh,uh,n,NA,Be,"Beech, American",Fagus grandifolia
+bn,bn,hwd,uh,uh,n,NA,Bn,Butternut,Juglans cinerea
+ch,ch,hwd,uh,uh,n,NA,CH,"Cherry, any/mix",Prunus spp.
+cb,cb,hwd,uh,uh,n,NA,Cb,"Cherry, black",Prunus serotina
+oh,oh,hwd,uh,uh,n,nw,OH,"hardwoods, other",------------
+hi,hi,hwd,uh,uh,n,NA,Hi,"hickory, all",Carya spp.
+iw,iw,hwd,uh,uh,n,NA,Iw,ironwood (also called Eastern hop-hornbeam),Ostrya virginiana
+mr,mr,hwd,uh,uh,n,NA,Mr,"Maple, red (also called soft maple)",Acer rubrum
+ms,ms,hwd,uh,uh,n,NA,Ms,"Maple, silver",Acer saccharinum
+mh,mh,hwd,uh,uh,n,NA,Mh,"Maple, sugar (also called hard maple)",Acer saccharum
+ob,ob,hwd,uh,uh,n,NA,Ob,"oak, bur",Quercus macrocarpa
+qr,qr,hwd,uh,uh,n,NA,Qr,"oak, red (or northern red)",Quercus rubra
+ow,ow,hwd,uh,uh,n,NA,Ow,"oak, white",Quercus alba
+or,qr,hwd,uh,uh,n,ocnv,NA,NA,NA
