@@ -146,7 +146,7 @@ def execute_sqls(f, inputfc, existingFields, df):
 	for index, row in select_df.iterrows():
 		sql_order = row['SQL_ORDER']
 		sql_name = row['SQL_NAME']
-		sql = row['SQL_SYNTAX'] + ' AND %s IS NULL'%f #########################
+		sql = "POLYTYPE = 'FOR' AND (" + row['SQL_SYNTAX'] + ') AND %s IS NULL'%f #########################
 		logger.print2("\t%s. %s:"%(sql_order,sql_name))
 		logger.print2("\t%s"%sql)
 		arcpy.management.SelectLayerByAttribute(lyr, "NEW_SELECTION", sql)

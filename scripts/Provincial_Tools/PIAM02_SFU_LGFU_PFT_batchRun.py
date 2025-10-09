@@ -148,7 +148,7 @@ def execute_sqls(f, inputfc, existingFields, df):
 	for index, row in select_df.iterrows():
 		sql_order = row['SQL_ORDER']
 		sql_name = row['SQL_NAME']
-		sql = row['SQL_SYNTAX'] + ' AND %s IS NULL'%f #########################
+		sql = "POLYTYPE = 'FOR' AND (" + row['SQL_SYNTAX'] + ') AND %s IS NULL'%f #########################
 		logger.print2("\t%s. %s:"%(sql_order,sql_name))
 		logger.print2("\t%s"%sql)
 		arcpy.management.SelectLayerByAttribute(lyr, "NEW_SELECTION", sql)
@@ -179,6 +179,11 @@ if __name__ == '__main__':
 		'FarNorth_NorthCentral', 'FarNorth_Northeast', 'FarNorth_Northwest', 'FarNorth_Taash',
 		'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
 		'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa']
+
+	mu_list = ['FC035','FC930','FC889']
+	mu_list = ['FC230']
+
+
 
 	field = ['SFU','LGFU','PFT'] # can pick multiples from ['SFU','LGFU','PFT']  eg. 'SFU;LGFU;PFT' NOTE: PFT and LGFU cannot be generated without SFU
 	skip_eco_if_exists = True # skip populating values if ECONUM already exists
