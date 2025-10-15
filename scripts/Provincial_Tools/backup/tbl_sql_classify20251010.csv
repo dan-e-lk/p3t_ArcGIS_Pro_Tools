@@ -289,47 +289,49 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 (LGFU='SF1' AND AGE>=40 AND AGE<=79) OR
 (LGFU='MW2' AND AGE>=30 AND AGE<=69) OR
 (LGFU='BOG' AND AGE>=40 AND AGE<=79)",can be deleted unless NER LGFU actually has PW1,,
-350,NEBOR,LGFU,1,PR1,SFU='PR1',,,This maps NER LGFU directly with NER SFU
-351,NEBOR,LGFU,2,PRW,"SFU in ('PW1','PRW')",,,This maps NER LGFU directly with NER SFU
-356,NEBOR,LGFU,3,LH1,"SFU IN ('LH1','TH1')",,,This maps NER LGFU directly with NER SFU
-359,NEBOR,LGFU,4,BOG,SFU = 'SBOG',,,This maps NER LGFU directly with NER SFU
-360,NEBOR,LGFU,5,SB1,SFU = 'SB1',,,This maps NER LGFU directly with NER SFU
-362,NEBOR,LGFU,6,PJ1,SFU = 'PJ1',,,This maps NER LGFU directly with NER SFU
-364,NEBOR,LGFU,7,LC1,"SFU in ('LC1','UPCE')",,,This maps NER LGFU directly with NER SFU
-365,NEBOR,LGFU,8,PJ2,SFU = 'PJ2',,,This maps NER LGFU directly with NER SFU
-367,NEBOR,LGFU,9,SP1,SFU = 'SP1',,,This maps NER LGFU directly with NER SFU
-,NEBOR,LGFU,10,SF1,SFU = 'SF1',,,This maps NER LGFU directly with NER SFU
-,NEBOR,LGFU,11,PO1,SFU = 'PO1',,,This maps NER LGFU directly with NER SFU
-,NEBOR,LGFU,12,BW1,SFU = 'BW1',,,This maps NER LGFU directly with NER SFU
-,NEBOR,LGFU,13,MW1,"SFU in ('MC1','MH1')",,,This maps NER LGFU directly with NER SFU
-,NEBOR,LGFU,14,MW2,"SFU in ('MC2','MH2')",,,This maps NER LGFU directly with NER SFU
-490,NEBOR,PFT,1,PWR,"SFU IN ('PR1','PW1','PRW')",Red and White Pine,,
-491,NEBOR,PFT,2,PJK,SFU='PJ1',Jack Pine,,
-492,NEBOR,PFT,3,MCU,"SFU IN ('SP1','SF1','PJ2','UPCE')",Conifer Upland,added UPCE,
-493,NEBOR,PFT,4,MCL,"SFU IN ('SBOG','SB1','LC1')",Conifer Lowland,,
-494,NEBOR,PFT,5,MIX,"SFU IN ('MH1','MH2','MC1','MC2')",Mixedwood,,
-495,NEBOR,PFT,6,POP,SFU='PO1',Poplar,,
-496,NEBOR,PFT,7,BWT,SFU='BW1',White Birch,,
-497,NEBOR,PFT,8,TOL,"SFU IN ('LH1','TH1')",Tolerant Hardwoods,,
-310,NEBOR,SFU,1,PR1,PR>=70,"Red Pine, Plantations",,same as NER Boreal SRNV2024
-,NEBOR,SFU,2,PW1,(PW+PR+HE+SW >= 40 AND PW>=30),"White Pine, Shelterwood",removed SX,same as NER Boreal SRNV2024
-311,NEBOR,SFU,3,PRW,(PW+PR+SW+HE>= 40 AND PW+PR>= 30),Red and White Pine,removed SX,same as NER Boreal SRNV2024
-312,NEBOR,SFU,4,LH1,"((AB + EX >= 20 AND ECONUM IN (119,120,123,129,130,131,133)) OR PB >= 70)",Lowland Hardwood,No longer counting YB and MR. Added EcoNum 133,same as NER Boreal SRNV2024
-,NEBOR,SFU,5,TH1,AB+EX+MH+YB+MR+HE >= 30,Tolerant Hardwood,No change from v9 ROD2023,same as NER Boreal SRNV2024
-313,NEBOR,SFU,6,SBOG,"SB+LA+CE>=70 AND SC=4 AND ECONUM IN (126,136,137)","SC4 Black Spruce, Bog",No change from v9 ROD2023,same as NER Boreal SRNV2024
-315,NEBOR,SFU,7,SB1,"(SB>=80 AND AB<=10) OR (SB>=70 AND ECONUM IN (127,128,129,222,223,224))","Black Spruce, Lowland","Used to be SB>=80 AND AB<=10 AND ECONUM IN (127,128,129,222,223,224)",same as NER Boreal SRNV2024
-316,NEBOR,SFU,8,PJ1,PJ>=70 AND PO+PT+BW+YB+MR+MH+AB+EX+PB<=20,"Jack Pine, Pure","Used to be (PJ>=90 OR (PJ>=70 AND PO+PT+BW+YB+MR+MH+AB+EX+PB<=20 AND ECONUM IN (12,33,34,35,48,49,50)))",same as NER Boreal SRNV2024
-317,NEBOR,SFU,9,LC1,"CE+LA+SB+BF+SW>= 70 AND ECONUM IN (127,128,129,222,223,224,136,137)",Lowland Conifer,No change from v9 ROD2023,same as NER Boreal SRNV2024
-,NEBOR,SFU,10,UPCE,CE>=40,Upland Cedar,Added since SRNV2024,same as NER Boreal SRNV2024
-318,NEBOR,SFU,11,PJ2,(PJ+SB+PR+PW>=70 OR (PJ>=30 AND PJ+SB+BF+SW+PW+PR+CE+LA>=70)) AND PJ+PW+PR>=SB+SW+CE,"Jack Pine, Pure",No change from v9 ROD2023,same as NER Boreal SRNV2024
-319,NEBOR,SFU,12,SP1,SB+SW+BF+CE+LA+PW+PJ+PR+HE>=70 AND (BF+CE+PW+SW+HE<=20 OR PJ+PR+LA>=30),Jack Pine Black Spruce,No change from v9 ROD2023,same as NER Boreal SRNV2024
-320,NEBOR,SFU,13,SF1,SB+SW+BF+CE+LA+PW+PJ+PR>=70,"Spruce, Upland",No change from v9 ROD2023,same as NER Boreal SRNV2024
-321,NEBOR,SFU,14,PO1,PO+PT+PL+BW+MH+YB+MR+AB+EX+PB>=70 AND PO+PT+PL+PB>=50,Poplar,No change from v9 ROD2023,same as NER Boreal SRNV2024
-322,NEBOR,SFU,15,BW1,PO+PT+PL+BW+MH+YB+MR+AB+EX+PB>=70,White Birch,No change from v9 ROD2023,same as NER Boreal SRNV2024
-323,NEBOR,SFU,16,MH1,"BF<=20 AND SW<=20 AND CE<=20 AND PO+PT+PL+BW+MH+YB+MR+AB+EX+PB>=50 AND PJ+PR<=50 AND PJ+PR>=20 AND ECONUM IN (16,19,28,40,43,55,59,70,76)",Mixedwood Hardwood Fresh Coarse,No change from v9 ROD2023,same as NER Boreal SRNV2024
-324,NEBOR,SFU,17,MC1,"(BF<=20 AND SW<=20 AND CE<=20 AND PJ+PR+LA>=20 AND ECONUM IN (12,14,35,37,38,50,52,53,65,67,68)) OR PJ+PR>=50",Mixedwood Conifer Fresh Coarse,No change from v9 ROD2023,same as NER Boreal SRNV2024
-325,NEBOR,SFU,18,MH2,ALLHWD > ALLCON,Mixedwood Hardwood Moist Fine,,"This looks different, but essentially same as NER Boreal SRNV2024 since it later catches all rest of undefined as MH2 or MC2"
-326,NEBOR,SFU,19,MC2,Stkg>=0,Mixedwood Conifer Moist Fine,,"This looks different, but essentially same as NER Boreal SRNV2024 since it later catches all rest of undefined as MH2 or MC2"
+350,NEBOR,LGFU,1,PR1,(PR>=70),,,
+351,NEBOR,LGFU,2,PRW,(PW+PR+SW+HE>= 40) AND (PW>=30),,,
+353,NEBOR,LGFU,3,PRW,(PW+PR>= 40),,,
+356,NEBOR,LGFU,4,LH1,LH>=30 AND EcoGrp='HwdLow',,simplified,There's no way LH is not greater than 30 when PB is greater than 30 because LH includes PB
+358,NEBOR,LGFU,6,LH1,(LH+YB+MR+UH+MH+HE+OH>=30),,,
+359,NEBOR,LGFU,7,BOG,(SB+LA+OC>=70) AND (PW=0) AND (SC=4) AND (EcoGrp='ConLow'),,,
+360,NEBOR,LGFU,8,SB1,(SB>=70) AND (YB+UH+PR=0) AND (PW+PJ<=10) AND (EcoGrp='ConLow'),,,"UH already includes MR, MH"
+362,NEBOR,LGFU,9,PJ1,(PJ>=70) AND (PO+PL+PT+BW+UH+LH+OH<=20) AND (EcoGrp='PineES'),,"UH already includes MR, MH and YB",originally (PJ>=70) AND (PO+BW+YB+MR+UH+MH+LH+OH<=20) AND (EcoGrp='PineES')
+364,NEBOR,LGFU,10,LC1,(CE+LA+SB>=70) AND (YB+UH+PR=0) AND (PW+PJ<=10) AND (EcoGrp='ConLow'),,,"UH already includes MR, MH"
+365,NEBOR,LGFU,11,PJ2,(PJ+SB+PR>=70) AND (PJ>=SB),,,
+366,NEBOR,LGFU,12,PJ2,(PJ>=50) AND (PJ+SB+BF+SW+HE+PW+PR+CE+LA+OC>=70) AND (PJ>=SB),,,
+367,NEBOR,LGFU,13,SP1,(SB+SW+BF+CE+LA+PW+PJ+PR+HE+OC>=70) AND (BF+CE+PW+LA+SW+HE<=20 OR PJ>=30),,simplified,
+,NEBOR,LGFU,15,SF1,(SB+SW+BF+CE+LA+PW+PJ+PR+HE+OC>=70),,,
+,NEBOR,LGFU,16,PO1,(PO+PT+PL+PB+BW+UH+LH+OH>=70) AND (PO+PT+PL+PB>=50),,,"UH already includes MR, MH, YB. Updated using OLT query"
+,NEBOR,LGFU,17,BW1,PO+PT+PL+PB+BW+UH+LH+OH>=70,,,"UH already includes MR, MH, YB. Updated using OLT query"
+,NEBOR,LGFU,18,MW1,EcoGrp='NA' AND PO+PT+PL+PB+BW+UH+LH>=50 AND (PJ+PR>=20 OR (BF<=20 AND SW<=20 AND CE<=20)),,Major simplification,"UH already includes MR, MH, YB. Updated using OLT query. It was originally unnecessarily 4 lines of SQLs. Simplified into one"
+,NEBOR,LGFU,23,MW2,Stkg>=0,,,
+490,NEBOR,PFT,1,PWR,"SFU IN ('PR1','PW1','PRW')",,Confirmed,
+491,NEBOR,PFT,2,PJK,SFU='PJ1',,Confirmed,
+492,NEBOR,PFT,3,MCU,"SFU IN ('SP1','SF1','PJ2')",,Confirmed,
+493,NEBOR,PFT,4,MCL,"SFU IN ('SBOG','SB1','LC1')",,Confirmed,
+494,NEBOR,PFT,5,MIX,"SFU IN ('MH1','MH2','MC1','MC2')",,Confirmed,
+495,NEBOR,PFT,6,POP,SFU='PO1',,Confirmed,
+496,NEBOR,PFT,7,BWT,SFU='BW1',,Confirmed,
+497,NEBOR,PFT,8,TOL,"SFU IN ('LH1','TH1')",,Confirmed,
+310,NEBOR,SFU,1,PR1,PR>=70,"Red Pine, Plantations",Confirmed,same as v9 ROD2023
+,NEBOR,SFU,2,PW1,(PW+PR+HE+SW >= 40 AND PW>=30),"White Pine, Shelterwood",Added and confirmed,removed SX from v9_ROD2023
+311,NEBOR,SFU,3,PRW,(PW+PR+SW+HE>= 40 AND PW+PR>= 30),Red and White Pine,Confirmed,"following v9_ROD2023, but removed SX"
+312,NEBOR,SFU,4,LH1,"((AB + EX + YB >= 20 AND ECONUM IN (119,120,123,129,130,131)) OR PB >= 70)",Lowland Hardwood,Confirmed,"same as v9 ROD2023, but changed EW to EX because there's no EW group spc"
+,NEBOR,SFU,5,TH1,AB+EX+MH+YB+MR+HE >= 30,Tolerant Hardwood,Confirmed,"same as v9 ROD2023, but changed EW to EX because there's no EW group spc"
+313,NEBOR,SFU,6,SBOG,"SB+LA+CE>=70 AND SC=4 AND ECONUM IN (126,136,137)","SC4 Black Spruce, Bog",Confirmed,"following v9_ROD2023, but SB group includes SX as well here"
+315,NEBOR,SFU,7,SB1,"SB>=80 AND AB<=10 AND ECONUM IN (127,128,129,222,223,224)","Black Spruce, Lowland",Confirmed,same as v9 ROD2023
+316,NEBOR,SFU,8,PJ1,"(PJ>=90 OR (PJ>=70 AND PO+PT+BW+YB+MR+MH+AB+EX+PB<=20 AND ECONUM IN (12,33,34,35,48,49,50)))","Jack Pine, Pure",Confirmed,same as v9 ROD2023
+317,NEBOR,SFU,9,LC1,"CE+LA+SB+BF+SW>= 70 AND ECONUM IN (127,128,129,222,223,224,136,137)",Lowland Conifer,Confirmed,same as v9 ROD2023
+318,NEBOR,SFU,10,PJ2,(PJ+SB+PR+PW>=70 OR (PJ>=30 AND PJ+SB+BF+SW+PW+PR+CE+LA>=70)) AND PJ+PW+PR>=SB+SW+CE,"Jack Pine, Pure",Confirmed,same as v9 ROD2023
+319,NEBOR,SFU,11,SP1,SB+SW+BF+CE+LA+PW+PJ+PR+HE>=70 AND (BF+CE+PW+SW+HE<=20 OR PJ+PR+LA>=30),Jack Pine Black Spruce,Confirmed,same as v9 ROD2023 but removed SX from the 2nd inequality because SB group is SB+SX.
+320,NEBOR,SFU,12,SF1,SB+SW+BF+CE+LA+PW+PJ+PR>=70,"Spruce, Upland",Confirmed,same as v9 ROD2023
+321,NEBOR,SFU,13,PO1,PO+PT+PL+BW+MH+YB+MR+AB+EX+PB>=70 AND PO+PT+PL+PB>=50,Poplar,Confirmed,same as v9 ROD2023
+322,NEBOR,SFU,14,BW1,PO+PT+PL+BW+MH+YB+MR+AB+EX+PB>=70,White Birch,Confirmed,same as v9 ROD2023
+323,NEBOR,SFU,15,MH1,"(BF<=20 AND SW<=20 AND CE<=20 AND PO+PT+PL+BW+MH+YB+MR+AB+EX+PB>=50 AND PJ+PR<=50 AND PJ+PR>=20 AND ECONUM IN (16,19,28,40,43,55,59,70,76))",Mixedwood Hardwood Fresh Coarse,Confirmed,same as v9 ROD2023 but removed SX from the 2nd inequality because SB group is SB+SX.
+324,NEBOR,SFU,16,MC1,"((BF<=20 AND SW<=20 AND CE<=20 AND PJ+PR+LA>=20 AND ECONUM IN (12,14,35,37,38,50,52,53,65,67,68)) OR PJ+PR>=50)",Mixedwood Conifer Fresh Coarse,Confirmed,same as v9 ROD2023 but removed SX from the 2nd inequality because SB group is SB+SX.
+325,NEBOR,SFU,17,MH2,ALLHWD > ALLCON,Mixedwood Hardwood Moist Fine,Confirmed,"This looks different, but essentially same as ROD2023 since it later catches all rest of undefined as MH2 or MC2"
+326,NEBOR,SFU,18,MC2,Stkg>=0,Mixedwood Conifer Moist Fine,Confirmed,"This looks different, but essentially same as ROD2023 since it later catches all rest of undefined as MH2 or MC2"
 1,NWBOR,ECOGRP,1,ConLow,"ECONUM IN (126,127,128,129,134,135,136,137,222,223,224)",,,Econum = 126 or Econum = 127 or Econum = 128 or Econum = 129 or Econum = 134 or Econum = 135 or Econum = 136 or Econum = 137 or Econum = 222 or Econum = 223 or Econum = 224
 2,NWBOR,ECOGRP,2,HwdLow,"ECONUM IN (130,131,132,133)",,,Econum = 130 or Econum = 131 or Econum = 132 or Econum = 133
 3,NWBOR,ECOGRP,3,UplCe,"ECONUM IN (13,36,51,66,84,100,115)",,,Econum = 13 or Econum = 36 or Econum = 51 or Econum = 66 or Econum = 84 or Econum = 100 or Econum = 115

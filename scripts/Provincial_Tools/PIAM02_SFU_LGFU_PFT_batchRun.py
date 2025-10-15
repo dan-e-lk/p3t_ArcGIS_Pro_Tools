@@ -174,15 +174,10 @@ if __name__ == '__main__':
 		'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
 		'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa']
 
-	mu_list = ['FC930', 'FC966', 'FC994',
-		'FarNorth_BerensRiver', 'FarNorth_CatLake', 'FarNorth_ConstanceL', 'FarNorth_MooseCree',
-		'FarNorth_NorthCentral', 'FarNorth_Northeast', 'FarNorth_Northwest', 'FarNorth_Taash',
-		'Lake_Superior_Islands', 'Lake_Nipigon_Islands', 'Park_EagleSnowshoe', 'Park_LitGrRap',
-		'Park_LkSuperior', 'Park_Quetico', 'Park_WCaribou', 'Park_Wabakimi', 'Park_pukaskwa']
-
 	mu_list = ['FC035','FC930','FC889']
-	mu_list = ['FC230']
 
+	# ALL NEBOR
+	mu_list = ['FC421', 'FC438', 'FC930', 'FC280', 'FC060', 'FC601', 'FC390', 'FC574', 'FC110', 'FarNorth_ConstanceL', 'FarNorth_Northeast', 'FarNorth_MooseCree', 'Park_pukaskwa']
 
 
 	field = ['SFU','LGFU','PFT'] # can pick multiples from ['SFU','LGFU','PFT']  eg. 'SFU;LGFU;PFT' NOTE: PFT and LGFU cannot be generated without SFU

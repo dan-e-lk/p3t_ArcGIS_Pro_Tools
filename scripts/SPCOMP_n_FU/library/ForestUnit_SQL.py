@@ -522,6 +522,7 @@ NER_Boreal_SRNV2023_UPCE = {
 
 NER_Boreal_SRNV2024 = {
 # revised on May 13, 2024
+# The New Official - Same query used for provincial roll-up, except the use of Devstage in SP1 in order 21 and 22.
 # Changes from SRNV2023:
 # SB1 revised to include Sb1>80 or SB>70 plus ecosite
 # LH1 - removed BY and MR
