@@ -1,4 +1,7 @@
 # !!! NEED TO ADD SGR FLAT !!! All you need to do is to add a script and copy over SGR_Flat from AR_Master to ARAR.gdb
+
+# Also recalc hectares field.
+
 intro = """
 version 1.0
 AR_Master has many separate components. This script merges same type of activies together into one feature class. 
@@ -125,12 +128,12 @@ SEED and PLANT may occur more than once. Refer to the ~*2 fields such as AR_YEAR
 	def tending(self):
 		# variables
 		DS_name = "Tend" # try to stick to the same DS name as the AR Master
-		template = 'Tend/Tend_ChemA'
-		append_lst = [os.path.join(ar_master_path,DS_name,i) for i in ['Tend_Prot','Tend_ManImpThin','Tend_ChemG17','Tend_ChemG','Tend_ChemA17']]
+		template = 'Tend/Tend_ChemA17'
+		append_lst = [os.path.join(ar_master_path,DS_name,i) for i in ['Tend_Prot','Tend_ManImpThin','Tend_ChemG17','Tend_ChemG_02to16_stacked','Tend_ChemA_02to16_stacked']]
 		new_fc_name = 'Tend_All_02_n_up'
 		note = """
 		Remember:
-Tending events may occur more than once. Refer to the ~*2 fields such as TRTMTHD2, TRTCAT2, etc. for those second (and third) occurances.
+Tending events often occur more than once at the same location. That's why this layer won't be region topology, but rather a stacked topology.
 		"""
 
 		# create feature dataset
@@ -245,12 +248,12 @@ if __name__ == '__main__':
 
 	#### below: you can comment out the ones that you don't need to run
 	## Rolling up all fcs in the same category into a single fc.
-	ar.harvest()
-	ar.est()
-	ar.regen()
+	# ar.harvest()
+	# ar.est()
+	# ar.regen()
 	ar.tending()
-	ar.sip()
-	ar.road()
+	# ar.sip()
+	# ar.road()
 
 	# writing the log file
 	logger.log_close()
