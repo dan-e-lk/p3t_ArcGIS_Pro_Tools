@@ -1,3 +1,5 @@
+# Add WTX!!!
+
 # this tool is used to update the ARAR on AGOL. When you have a new AR Master, use 01_AR_AR.py to create ARAR.gdb. 
 # Then use this script to turn it into geopackage files which you can use to overwrite each of the ARAR layers already existing on AGOL
 # why do this?  so I don't have to symbolize and custom label AGOL ARAR layers every time there's a new AR_Master.
@@ -34,12 +36,18 @@ def ARAR_to_gp(input_arar, out_gdb, gp_output_folder):
 	# Reference the current project and map
 	aprx = arcpy.mp.ArcGISProject("CURRENT")
 	m = aprx.activeMap
-
 	# these are FCs in ARAR to be simplified
-	fc_list = ['EST_Y_02_n_up','HRV_All_02_n_up','Regen_All_02_n_up','SIP_All_02_n_up','Tend_All_02_n_up','Roads_All_06_n_up']
-	# for testing only:
-	# fc_list = ['HRV_All_02_n_up','Roads_All_06_n_up']
-	# fc_list = ['SIP_All_02_n_up']
+	fc_list = {
+	'EST_Y_02_n_up':'polygon',
+	'HRV_All_02_n_up':'polygon',
+	'Regen_All_02_n_up':'polygon',
+	'SIP_All_02_n_up':'polygon',
+	'Tend_All_02_n_up':'polygon',
+	'SGR_flat_08_n_up':'polygon',
+	'Roads_All_06_n_up':'polyline',
+	'AGG_08_n_up':'point',
+	'WTX_08_n_up':'point'}
+
 	new_fc_list = []
 
 	# creating new feature data set in the output gdb
@@ -51,8 +59,8 @@ def ARAR_to_gp(input_arar, out_gdb, gp_output_folder):
 	logger.print2("\n##### ### ##    SIMPLIFY    ## ### #####\n")
 
 	arcpy.env.workspace = input_arar
-	for fc in fc_list:
-		if 'Roads' not in fc:
+	for fc, fctype in fc_list.items():
+		if fctype == 'polygon':
 			logger.print2("\nSimplifying %s with %sm tolerance with minimum area of %sm2."%(fc,simp_poly_tol_m,simp_poly_min_m2))
 			out_fc_name = 'Simplified_%s'%fc # if you chnage this, you have to also change the lyrx file name under lyr folder
 			out_fc_path = os.path.join(dest_feature_ds,out_fc_name)
@@ -67,7 +75,7 @@ def ARAR_to_gp(input_arar, out_gdb, gp_output_folder):
 				in_barriers=None)
 			new_fc_list.append(out_fc_path)
 
-		else:
+		elif fctype == 'polyline':
 			logger.print2("\nSimplifying %s with %sm tolerance."%(fc,simp_line_tol_m))
 			out_fc_name = 'Simplified_%s'%fc # if you chnage this, you have to also change the lyrx file name under lyr folder
 			out_fc_path = os.path.join(dest_feature_ds,out_fc_name)			
@@ -83,6 +91,12 @@ def ARAR_to_gp(input_arar, out_gdb, gp_output_folder):
 				error_option="NO_CHECK")
 			new_fc_list.append(out_fc_path)
 
+		else:
+			logger.print2("\nCopying over %s..."%fc)
+			arcpy.FeatureClassToFeatureClass_conversion(fc, dest_feature_ds, fc)
+			new_fc_list.append(os.path.join(dest_feature_ds,fc))
+
+
 
 	logger.print2("\n##### ### ##    Delete Fields & reCalc Ha&Km    ## ### #####\n")
 	# delete unnecessary fields and recalculate "Hectares" or "Km"
@@ -93,10 +107,12 @@ def ARAR_to_gp(input_arar, out_gdb, gp_output_folder):
 		# delete MaxSimpTol and MinSimpTol and either InLine_FID or InPoly_FID
 		if shape == 'Polyline':
 			delete_fields = ['MaxSimpTol','MinSimpTol','InLine_FID']
-		else:
+			logger.print2("\nDeleting fields: %s"%delete_fields)
+			arcpy.management.DeleteField(fc, delete_fields)			
+		elif shape == 'Polygon':
 			delete_fields = ['MaxSimpTol','MinSimpTol','InPoly_FID']
-		logger.print2("\nDeleting fields: %s"%delete_fields)
-		arcpy.management.DeleteField(fc, delete_fields)
+			logger.print2("\nDeleting fields: %s"%delete_fields)
+			arcpy.management.DeleteField(fc, delete_fields)
 
 		# recalculating Hactares or Km
 		if shape == 'Polyline':
@@ -118,9 +134,11 @@ def ARAR_to_gp(input_arar, out_gdb, gp_output_folder):
 			logger.print2("\nRecalculating Km...")
 			arcpy.management.CalculateGeometryAttributes(fc, "Km LENGTH", length_unit="KILOMETERS", coordinate_system=projfile)
 
-		else:
+		elif shape == 'Polygon':
 			logger.print2("\nRecalculating Hectare...")
 			arcpy.management.CalculateGeometryAttributes(fc, "Hectares AREA", area_unit="HECTARES", coordinate_system=projfile)
+		else:
+			pass
 
 
 	logger.print2("\n##### ### ##    Export as GeoPackage   ## ### #####\n")
@@ -152,12 +170,12 @@ if __name__ == '__main__':
 	
 	# gather inputs
 	input_arar = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\D\AR\AnalysisReadyAR.gdb'
-	out_gdb = r'C:\Users\kimdan\OneDrive - Government of Ontario\_FPPS\Projects\AGOL_everything\AR\ARAR_simplified2.gdb' # this gdb can be empty, but must already exist
+	out_gdb = r'C:\Users\KimDan\OneDrive - Government of Ontario\_FPPS\Projects\AGOL_everything\AR\ARAR_Simplified.gdb' # this gdb can be empty, but must already exist
 	gp_output_folder = r'C:\Users\kimdan\OneDrive - Government of Ontario\_FPPS\Projects\AGOL_everything\AR\arar_to_gp_output'
 
 	######### logfile stuff
 
-	tool_shortname = 'ARAR2SD' # the output logfile will include this text in its filename.
+	tool_shortname = 'ARAR2GPK' # the output logfile will include this text in its filename.
 
 	# importing libraries (only works if arclog.py file is located on the parent folder of this script)
 	from datetime import datetime

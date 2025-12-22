@@ -1,6 +1,5 @@
-# !!! NEED TO ADD SGR FLAT !!! All you need to do is to add a script and copy over SGR_Flat from AR_Master to ARAR.gdb
+# add an option to export as geopackage
 
-# Also recalc hectares field.
 
 intro = """
 version 1.0
@@ -8,6 +7,7 @@ AR_Master has many separate components. This script merges same type of activies
 for example, all harvests 02 and greater into one feature class
 Not all types of activities are included in this script.
 	the script will append on FTG, RGN, SIP, TND, Roads and HRV.
+	the script will copy over AGG, WTX and SGR
 """
 
 
@@ -225,6 +225,35 @@ Mechanical Site Prep layer usually has the most records (~80k).
 		self.logger.print2("\t%s complete!"%DS_name)
 
 
+	def other(self):
+		# variables
+		DS_name = "Other" # try to stick to the same DS name as the AR Master
+		oldname_newname = {
+		'agg_pits': 'AGG_08_n_up',
+		'SGR_Flat': 'SGR_flat_08_n_up',
+		'Water_Xing': 'WTX_08_n_up'
+		}
+		note = "Copying over SGR_Flat, agg_pits, and Water_Xing"
+
+		# create feature dataset
+		self.logger.print2("\n## Working on %s"%DS_name)
+		self.logger.print2(note)
+		self.logger.print2("\tMaking new Feature dataset: %s"%DS_name)
+		arcpy.Delete_management(DS_name)
+		arcpy.CreateFeatureDataset_management(self.arar_gdb_path, DS_name, self.projfile)
+		dest_feature_dataset = os.path.join(self.arar_gdb_path, DS_name)
+
+		# start copying over
+		arcpy.env.workspace = ws = self.ar_master_path # need to find the fcs regardless of their dataset name
+		for oldname, newname in oldname_newname.items():
+			self.logger.print2("\tCopying over %s..."%oldname)
+			arcpy.FeatureClassToFeatureClass_conversion(oldname, dest_feature_dataset, newname)
+			self.logger.print2("\t\tDone!")
+
+		self.logger.print2("\t%s complete!"%DS_name)
+		arcpy.env.workspace = ws = self.arar_gdb_path
+
+
 
 
 if __name__ == '__main__':
@@ -248,12 +277,13 @@ if __name__ == '__main__':
 
 	#### below: you can comment out the ones that you don't need to run
 	## Rolling up all fcs in the same category into a single fc.
-	# ar.harvest()
-	# ar.est()
-	# ar.regen()
+	ar.harvest()
+	ar.est()
+	ar.regen()
 	ar.tending()
-	# ar.sip()
-	# ar.road()
+	ar.sip()
+	ar.road()
+	ar.other() # AGG, WTX and SGR
 
 	# writing the log file
 	logger.log_close()
