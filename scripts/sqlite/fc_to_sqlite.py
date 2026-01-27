@@ -1,3 +1,11 @@
+# This tool is too slow when there's over 500k records. Faster way: After creating a new sqlite3 file, use export table to export a polygon to sqlite table
+# arcpy.conversion.ExportTable(
+#     in_table=r"ARI with Volume (SLYM)\NWBOR_FOR_wVol",
+#     out_table=r"C:\Users\KimDan\Downloads\ARI_wFU_wVol.sqlite\NWBOR_FOR_wVOL",
+#     where_clause="",
+#     use_field_alias_as_name="NOT_USE_ALIAS"
+# )
+
 # exports a feature class to a table in SQLite3 database.
 # you can export it to an existing sqlite3 database OR create a new sqlite3 database.
 # if you are exporting it to an existing database, note that 
@@ -20,6 +28,7 @@ fieldtype_map = {
 }
 
 chunk_size = 100000 # will append the data in chuncks of x records
+# chunk_size = 5000 # will append the data in chuncks of x records
 
 
 def fc_to_sqlite(input_fc,output_sqlite_file,output_tablename):

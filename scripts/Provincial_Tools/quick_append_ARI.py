@@ -62,9 +62,11 @@ def main(ari_path, new_gdb, group, suffix, sql):
 if __name__ == '__main__':
 
 	ari_path = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_wFU.gdb' # 'template' fc should be included in this gdb
-	new_gdb = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_wFU_wVol.gdb' # must already exist
-	suffix = 'FOR' # to name the new fc. no special character here!
-	sql = "POLYTYPE='FOR'" # put None if no selection
+	new_gdb = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_base_meged.gdb' # must already exist
+	# suffix = 'FOR' # to name the new fc. no special character here!
+	suffix = '' # name the new fc. no special character here.
+	# sql = "POLYTYPE='FOR'" # put None if no selection
+	sql = None # put None if no selection
 
 	for group in group_dict.keys():
 		main(ari_path, new_gdb, group, suffix, sql)
