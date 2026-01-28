@@ -8,79 +8,86 @@
 
 
 # workflow:
-# - build temporary workspace environment.
-# - sql select and dissolve NEO_fin layer
-# - use generate tessellation to build H3 hexagon (lv 11 or 12?)
+# - loop through the mu_list
+# - from NEO_FIN, select those records that have a history of depletion and is within the particular mu
+# - from hex grid, select the grid of the mu and using select by location, select the grids where it intersects (have their center in) the selected NEO_FIN polygons
+# - export the selected hex grid polygons - now we have the base grid!
 
 
 import arcpy
-import os, csv
-import pandas as pd
+import os
 
 arcpy.env.overwriteOutput = True
 arcpy.env.XYTolerance = "0.01 Meters" # by default, it is 0.001 meters, which can generate 1mm-wide overlaps and gaps. So 0.01m is preferred.
 projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj") # this works for all scripts that are one folder level deep. eg. scripts/sqlite/script.py
 
-def chc(inputfc):
-	
-	# loading csv to list of dictionary
-	tbl_chc = 'habitat_classification.csv'
-	parent_folder = os.path.split(__file__)[0]
-	l_tbl_chc = list(csv.DictReader(open(os.path.join(parent_folder,tbl_chc))))
-	logger.print2(tbl_chc)
+def make_hex_base(neofin_path,Neofin_select_sql,hex_grid_gdb,out_gdb,mu_list):
 
-	# loading csv to pandas dataframe
-	tbl_plonski = 'tbl_plonski_metrics.csv'
-	df = pd.read_csv(tbl_plonski, na_filter=False) # if you don't disable na_filter, then it will change 'NA' 'N/A','null' into 'nan'
-	# https://pandas.pydata.org/docs/getting_started/intro_tutorials/03_subset_data.html
+	# make a new feature dataset with MNR Lambert Conformal Conic Projection
+	DS_name = "hex_base"
+	logger.print2("Generating dataset: %s..."%DS_name)
+	# find the projection file location
+	projfile = os.path.join(os.path.split(os.path.split(__file__)[0])[0],"MNRLambert_d.prj")
+	if not os.path.isfile(projfile):
+		# if the file doesn't exist, show error
+		arcpy.AddError("Can't find MNRLambert_d.prj file at the parent folder of %s"%__file__)
+		raise
+	arcpy.Delete_management(DS_name)
+	arcpy.CreateFeatureDataset_management(out_gdb, DS_name, projfile)
+	logger.print2("Dataset successfully generated!")
 
-	# see if a fc is polygon or polyline
-	desc = arcpy.Describe(fc)
-	shape = desc.shapeType # eg. Polyline, Polygon, etc.
 
-	# here are some lines I write all the time:
-	existingFields = [str(f.name).upper() for f in arcpy.ListFields(inputfc)]
-	oid_fieldname = arcpy.Describe(inputfc).OIDFieldName
-	count_orig = int(arcpy.management.GetCount(inputfc)[0])
-	arcpy.AddField_management(in_table = outputfc, field_name = check_field, field_type = "TEXT", field_length = "120")
-	arcpy.FeatureClassToFeatureClass_conversion(in_features=inputfc, out_path=os.path.split(outputfc)[0], out_name=os.path.split(outputfc)[1], where_clause=select_none_sql)
-	with arcpy.da.UpdateCursor(inputfc, existingFields) as cursor:
-		for row in cursor:
-			row[1] = 4
-			cursor.updateRow(row)	
+	arcpy.env.workspace = hex_grid_gdb
 
-	# Make Layer, Select, and Calculate Field
-	arcpy.management.MakeFeatureLayer(inputfc, "temp_lyr")
-	arcpy.management.SelectLayerByAttribute("temp_lyr", "NEW_SELECTION", "")
-	num_selected = int(arcpy.management.GetCount("temp_lyr")[0])
-	arcpy.management.CalculateField("temp_lyr", fieldName, expression, code_block=code_block)
+	# loop through mu
+	logger.print2("\nLooping through each MU")
+	for mu in mu_list:
+		muno_txt = mu[2:] # eg. when mu = 'FC040', then muno_txt = '040'
+		hex_fc_name = 'f_%s'%muno_txt
+		logger.print2("- Working on %s"%mu)
 
-	# copy fc and rename
-	arcpy.CopyFeatures_management(in_features=ARI_template,out_feature_class=new_fc_name)
+		# turn NEO_FIN into a layer - then select.
+		arcpy.management.MakeFeatureLayer(neofin_path, "neo_lyr")
+		sql = Neofin_select_sql + " AND INV_NAME = '%s'"%mu
+		logger.print2("\tSelect from NEO_FIN WHERE %s"%(sql))
+		arcpy.management.SelectLayerByAttribute("neo_lyr", "NEW_SELECTION", sql)
+		num_selected = int(arcpy.management.GetCount("neo_lyr")[0])
+		logger.print2("\t%s records selected"%num_selected)
 
-	# replace existing DS
-	arcpy.Delete_management(os.path.join(output_gdb,dsG)) # this will be ignored if the DS doesn't already exist.
-	arcpy.CreateFeatureDataset_management(output_gdb, dsG, projfile)
+		# turn hex grid into a layer then select by location using neo_lyr
+		arcpy.management.MakeFeatureLayer(hex_fc_name, "hex_lyr")
+		sql = Neofin_select_sql + " AND INV_NAME = '%s'"%mu
+		logger.print2("\tSelect by location: where hex grid have center in event polygons from the selected NEO_FIN")
+		arcpy.management.SelectLayerByLocation(in_layer="hex_lyr", overlap_type="HAVE_THEIR_CENTER_IN", select_features='neo_lyr', search_distance=None, selection_type="NEW_SELECTION")
+		num_selected = int(arcpy.management.GetCount("hex_lyr")[0])
+		logger.print2("\t%s records selected"%num_selected)
 
-	# append - will find and append only those fields that has the same fieldname - be careful of the field length difference
-	app_out = arcpy.management.Append(inputs=last_mu_list[index], target=new_fc_name, schema_type="NO_TEST")
-	append_count = int(app_out.getOutput("appended_row_count"))
+		# exporting the selected hex grid to out_gdb
+		base_hex_fc_name = hex_fc_name + '_base'
+		logger.print2("\tExporting the selected hex grid as %s"%base_hex_fc_name)
+		base_hex_fullpath = os.path.join(out_gdb, DS_name, base_hex_fc_name)
+		arcpy.conversion.ExportFeatures("hex_lyr",base_hex_fullpath)
+
+	logger.print2("\nDone!\nYou now have hexagon grid of all the event polygons.\nReady to run the next script!")
+
+
+
 
 if __name__ == '__main__':
 	
 	# gather inputs
-	neofin_path = r''
+	neofin_path = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\EventLayers\Event2002to2023.gdb\NEO4\NEO_fin'
+	Neofin_select_sql = 'NEO_YRDEP IS NOT NULL' # this is the base sql. more sql will be added. eg. ' AND INV_NAME = 'FC443'
 
-	
-	Neofin_select_sql = 'NEO_YRDEP IS NOT NULL' #
+	hex_grid_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test\test_Hex11.gdb' # will have layers such as 'f_443' and 'f_816'
+	out_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test\HexBase.gdb'
+
 
 	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
 			'FC230', 'FC280', 'FC350', 'FC360', 'FC390', 'FC406', 'FC415', 'FC421', 'FC438', 'FC443',
 			'FC451', 'FC490', 'FC535', 'FC574', 'FC601', 'FC615', 'FC644', 'FC680', 'FC702', 'FC754',
 			'FC780', 'FC796', 'FC816', 'FC840', 'FC889', 'FC898', 'FC930', 'FC966', 'FC994'] # 39 MUs
-	mu_list = ['FC443']
-
-
+	mu_list = ['FC443','FC816']
 
 
 
@@ -95,10 +102,10 @@ if __name__ == '__main__':
 	from arclog import Print2 as p2
 
 	# find full path where the logfile will be written
-	folder_path = arcpy.Describe(inputfc).path
+	folder_path = arcpy.Describe(out_gdb).path
 	while arcpy.Describe(folder_path).dataType != 'Folder':
 		folder_path = os.path.split(folder_path)[0]
-	outfile = os.path.split(inputfc)[1] + '_' + tool_shortname + '-LOG_' + datetime.now().strftime('%Y%m%d_%H%M') + '.txt'
+	outfile = os.path.split(out_gdb)[1] + '_' + tool_shortname + '-LOG_' + datetime.now().strftime('%Y%m%d_%H%M') + '.txt'
 	logfile_path = os.path.join(folder_path,outfile)
 
 	# importing arclog in the parent directory
@@ -107,7 +114,7 @@ if __name__ == '__main__':
 	##########
 
 	# run the main function(s)
-	chc(inputfc)
+	make_hex_base(neofin_path,Neofin_select_sql,hex_grid_gdb,out_gdb,mu_list)
 
 	# finish writing the logfile
 	logger.log_close()
