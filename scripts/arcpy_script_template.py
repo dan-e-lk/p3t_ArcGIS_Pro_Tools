@@ -56,6 +56,20 @@ def chc(inputfc):
 	app_out = arcpy.management.Append(inputs=last_mu_list[index], target=new_fc_name, schema_type="NO_TEST")
 	append_count = int(app_out.getOutput("appended_row_count"))
 
+
+	# make feature layer with only the join_include_field_list visible. (cause deleting them later takes way too long)
+	fields= arcpy.ListFields(join_full_path)
+	fieldinfo = arcpy.FieldInfo()
+	for field in fields:
+		if field.name.upper() in join_include_field_list:
+			fieldinfo.addField(field.name, field.name, "VISIBLE", "NONE")
+		else:
+			fieldinfo.addField(field.name, field.name, "HIDDEN", "NONE")
+	arcpy.management.MakeFeatureLayer(join_full_path, "join_lyr", field_info=fieldinfo)
+
+
+
+
 if __name__ == '__main__':
 	
 	# gather inputs

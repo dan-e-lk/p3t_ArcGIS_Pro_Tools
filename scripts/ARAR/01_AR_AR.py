@@ -1,3 +1,4 @@
+# on top of SGR_flat, add SGR_08_n_up - make sure to include TARGETFU and TARGETYD
 # add an option to export as geopackage
 
 
