@@ -113,11 +113,12 @@ if __name__ == '__main__':
 	 				'suffix':'range',
 	 				},	 	
 
-	'spcomp95':		{'path': r'C:\Users\KimDan\Government of Ontario\Forest Explorer - Data\D\GeoData\SpComp95\SpComp95.gdb\SpComp95', 
-	 				'sql': None,
-	 				'keepf': ['SPCOMP','LG_Region'],
-	 				'suffix':'spc95',
-	 				},
+	# adding spcomp95 takes too long - may be I need to compartmentalize spcomp95 first before doing spatial join by adding MUNO field and filling that out first.
+	# 'spcomp95':		{'path': r'C:\Users\KimDan\Government of Ontario\Forest Explorer - Data\D\GeoData\SpComp95\SpComp95.gdb\SpComp95', 
+	#  				'sql': None,
+	#  				'keepf': ['SPCOMP','LG_Region'],
+	#  				'suffix':'spc95',
+	#  				},
 
 	'Harvest':		{'path': os.path.join(ARAR_path,'Harvest','HRV_All_02_n_up'),
 	 				'sql': None,
@@ -155,6 +156,9 @@ if __name__ == '__main__':
 	 				'suffix':'sip',
 	 				},
 	}
+
+	# add latest ARI
+
 
 
 	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',

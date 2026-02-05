@@ -38,9 +38,22 @@ def populate_fu(inputfc,region,field,skip_eco_if_exists):
 	oid_fieldname = arcpy.Describe(inputfc).OIDFieldName
 	count_orig = int(arcpy.management.GetCount(inputfc)[0])
 	# checking mandatory fields
+	if region == 'GLSL' and 'LGFU' in field:
+		man_fields.append('DEVSTAGE') # DEVSTAGE is needed in GLSL LGDS script.
+		logger.print2("Checking DEVSTAGE. DEVSTAGE is needed in GLSL LGDS script.")
+	if region == 'NWBOR' and 'SFU' in field:
+		man_fields.append('LEADSPC') # LEADSPC is needed in NWR SFU script.
+		logger.print2("Checking LEADSPC. LEADSPC is needed in NWR SFU script.")
+	if region != 'NWBOR':
+		man_fields.append('STKG') # STKG is needed in NER SFU script and GLSL scripts.
+		logger.print2("Checking STKG. STKG is needed in NER SFU script and GLSL scripts.")
+	if 'LGFU' in field:
+		man_fields.append('AGE') # AGE is needed for LGDS and LGCLS
+		logger.print2("Checking AGE. AGE is needed for LGDS and LGCLS")
 	for fname in man_fields:
 		if fname not in existingFields:
-			logger.print2('Missing mandatory field: %s'%fname,'w')
+			logger.print2('\n\n!!! Missing mandatory field: %s\n\nBlame the SQLs not the tool maker'%fname,'w')
+			raise
 
 
 	# Add a new field: ECONUM
@@ -172,7 +185,7 @@ if __name__ == '__main__':
 
 	######### logfile stuff
 
-	tool_shortname = 'PIAM02' # the output logfile will include this text in its filename.
+	tool_shortname = 'PIAM02_SFU_PFT' # the output logfile will include this text in its filename.
 
 	# importing libraries (only works if arclog.py file is located on the parent folder of this script)
 	from datetime import datetime
