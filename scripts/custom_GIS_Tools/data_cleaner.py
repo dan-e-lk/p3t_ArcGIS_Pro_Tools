@@ -68,7 +68,7 @@ def cleaner(inputfc,output_gdb,delete_XS_poly,simp_tolerance,silver_sql1,silver_
 		logger.print2("\tDeleting %s out of %s records."%(select_count,orig_count))
 		arcpy.management.DeleteFeatures("templayer")
 
-	# Simplify Polygon
+	# Simplify Polygon - !! consider using Simplify Shared Edges instead.
 	logger.print2("\nRunning Simplify Polygon (Point Remove @ %sm tolerance)..."%simp_tolerance)
 	in_fcpath = out_fcpath
 	out_fcname = orig_fcname + '_03SimplifyPoly'

@@ -77,44 +77,6 @@ def fc_to_sqlite(input_fc,output_sqlite_file,output_tablename):
 	insert_by_chunks(input_fc, output_tablename, f_name_n_type2, chunk_size, cur, con)
 
 
-	# rec_count = int(arcpy.management.GetCount(input_fc)[0])
-	# arcpy.AddMessage("Record count: %s"%rec_count)
-	# if rec_count > 0:
-	# 	arcpy.AddMessage("Generating INSERT Query...")
-	# 	insert_sql = "INSERT INTO %s ("%output_tablename
-
-	# 	fname_list = list(f_name_n_type2.keys())
-	# 	for fname in fname_list:
-	# 		insert_sql += "%s,"%fname
-	# 	insert_sql = insert_sql[:-1] # delete trailing comma
-
-	# 	insert_sql += ") VALUES "
-	# 	with arcpy.da.SearchCursor(input_fc, fname_list) as cursor:
-	# 		for row in cursor:
-	# 			row_values_sql = "("
-	# 			for i, fname in enumerate(fname_list):
-	# 				if row[i] == None:
-	# 					row_values_sql += "null,"
-	# 				elif f_name_n_type2[fname] == "TEXT": # if it's text, you gotta wrap it
-	# 					text_value = str(row[i]).replace("'","''") # replace apostrophe with double apostrophe for text handling
-	# 					row_values_sql += "'%s',"%text_value
-	# 				else:
-	# 					row_values_sql += "%s,"%row[i]
-	# 			row_values_sql = row_values_sql[:-1] # delete trailing comma
-	# 			row_values_sql += ")," # eg. "(value1,value2,...),"
-	# 			insert_sql += row_values_sql
-
-	# 	insert_sql = insert_sql[:-1] # delete trailing comma
-	# 	insert_sql += ";"
-
-	# 	arcpy.AddMessage("Executing INSERT Query...")
-	# 	# arcpy.AddMessage(insert_sql)
-	# 	cur.execute(insert_sql)
-	# 	del insert_sql
-
-	# con.commit()
-	# con.close()
-
 
 
 def insert_by_chunks(input_fc, output_tablename, f_name_n_type2, chunk_size, cur, con):

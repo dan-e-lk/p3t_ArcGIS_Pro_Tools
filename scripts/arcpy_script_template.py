@@ -4,7 +4,7 @@
 
 
 import arcpy
-import os, csv
+import os, csv, traceback
 import pandas as pd
 
 arcpy.env.overwriteOutput = True
@@ -67,7 +67,10 @@ def chc(inputfc):
 			fieldinfo.addField(field.name, field.name, "HIDDEN", "NONE")
 	arcpy.management.MakeFeatureLayer(join_full_path, "join_lyr", field_info=fieldinfo)
 
-
+	try:
+		pass
+	except Exception:
+		arcpy.AddError(traceback.format_exc())
 
 
 if __name__ == '__main__':
