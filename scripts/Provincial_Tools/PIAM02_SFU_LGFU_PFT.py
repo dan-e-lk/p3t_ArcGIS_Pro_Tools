@@ -152,6 +152,7 @@ def execute_sqls(f, inputfc, existingFields, df):
 
 	# get SQLs in order
 	select_df = df[df["FIELD"]==f].sort_values(by=['SQL_ORDER']) # select (SFUs) and sort by SQL_ORDER
+	select_df = select_df.upper()
 
 	# loop through the select_df
 	logger.print2("\nPopulating %s"%f)

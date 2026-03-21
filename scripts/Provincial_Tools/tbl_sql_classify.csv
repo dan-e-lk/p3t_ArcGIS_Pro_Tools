@@ -3,7 +3,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 601,GLSL,ECOGRP,2,HwdLow,EcoNum = 71 or Econum = 120 or Econum = 130 or Econum = 131 or Econum = 132 or Econum = 133,,,
 602,GLSL,ECOGRP,3,UplCe,EcoNum = 13 or Econum = 36 or Econum = 51 or Econum = 66 or Econum = 84 or Econum = 100 or Econum = 115,,,
 603,GLSL,ECOGRP,4,ShalES,EcoNum = 11 or Econum = 12 or Econum = 14 or Econum = 15 or Econum = 16 or Econum = 17 or Econum = 18 or Econum = 19 or Econum = 23 or Econum = 24 or Econum = 25 or Econum = 26 or Econum = 27 or Econum = 28,,,
-604,GLSL,ECOGRP,5,NA,EcoNum>0,,,
+604,GLSL,ECOGRP,5,NA,EcoNum>=0,,originally EcoNum>0,
 810,GLSL,LGCLS,1,PSSap,(LGDS='P') or (LGDS='S'),,,
 811,GLSL,LGCLS,2,Immat,(LGDS='I'),,,
 812,GLSL,LGCLS,3,TolHwd,((LGFU='HDSL1')or(LGFU='HDSL2')or(LGFU='HDUS')or(LGFU='BY')or(LGFU='OAK')) and ((LGDS='M')or(LGDS='L') or (LGDS='T')),,,
@@ -204,7 +204,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 301,NEBOR,ECOGRP,2,HwdLow,"ECONUM IN (70,71,119,120,130,131)",,,Econum = 70 or Econum = 71 or Econum = 119 or Econum = 120 or Econum = 130 or Econum = 131
 302,NEBOR,ECOGRP,3,PineES,"ECONUM IN (12,34,35,49,50)",,,Econum = 12 or Econum = 34 or Econum = 49 or Econum = 35 or Econum = 50
 303,NEBOR,ECOGRP,4,ShalES,"ECONUM IN (11,12,14,15,16,17,18,19,23,24,25,26,27,28)",,,Econum = 11 or Econum = 12 or Econum = 14 or Econum = 15 or Econum = 16 or Econum = 17 or Econum = 18 or Econum = 19 or Econum = 23 or Econum = 24 or Econum = 25 or Econum = 26 or Econum = 27 or Econum = 28
-304,NEBOR,ECOGRP,5,NA,EcoNum>0,,,Careful when using 'NA'. some scripts automatically change this to 'nan'
+304,NEBOR,ECOGRP,5,NA,EcoNum>=0,,originally EcoNum>0,Careful when using 'NA'. some scripts automatically change this to 'nan'
 480,NEBOR,LGCLS,1,Bog,(LGFU='Bog'),,,
 481,NEBOR,LGCLS,2,PSSap,((LGDS='P')  or  (LGDS='S')),,,
 482,NEBOR,LGCLS,3,ImLPine,((LGFU='PJ1') or (LGFU='PR1')) and ((LGDS='I') or  (LGDS='M') or  (LGDS='L')),,,
@@ -334,21 +334,21 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 2,NWBOR,ECOGRP,2,HwdLow,"ECONUM IN (130,131,132,133)",,,Econum = 130 or Econum = 131 or Econum = 132 or Econum = 133
 3,NWBOR,ECOGRP,3,UplCe,"ECONUM IN (13,36,51,66,84,100,115)",,,Econum = 13 or Econum = 36 or Econum = 51 or Econum = 66 or Econum = 84 or Econum = 100 or Econum = 115
 4,NWBOR,ECOGRP,4,ShalES,"ECONUM IN (11,12,14,15,16,17,18,19,23,24,25,26,27,28)",,,Econum = 11 or Econum = 12 or Econum = 14 or Econum = 15 or Econum = 16 or Econum = 17 or Econum = 18 or Econum = 19 or Econum = 23 or Econum = 24 or Econum = 25 or Econum = 26 or Econum = 27 or Econum = 28
-5,NWBOR,ECOGRP,5,NA,EcoNum>0,,,
-128,NWBOR,LGCLS,1,PSSap,(LGDS='P') or ( LGDS='S'),,,
-129,NWBOR,LGCLS,2,ImmCon,"LGDS='I' and LGFU IN ('BFDom', 'ConMx', 'UplCe', 'PjDom', 'SbDom', 'Sblow', 'OCLOW', 'PJMX1', 'PRWMX', 'SBMX1')",,,
-130,NWBOR,LGCLS,3,ImmHwd,"LGDS='I' and LGFU IN ('BWDom', 'HRDMX', 'HRDOM', 'PODOM', 'OTHHD')",,,
-131,NWBOR,LGCLS,4,MLBfir,(LGDS='M' or LGDS='L') and LGFU='BFDom',,,
-132,NWBOR,LGCLS,5,MLLCon,(LGDS='M' or LGDS='L') and (LGFU='SBLOW' or LGFU='OCLOW'),,,
-133,NWBOR,LGCLS,6,MLHdMx,(LGDS='M' or LGDS='L') and (LGFU='BWDOM' or LGFU='HRDMX' or LGFU='HRDOM' or LGFU='OTHHD' or LGFU='PODOM'),,,
-134,NWBOR,LGCLS,7,MLUcMx,"(LGDS='M' or LGDS='L') and LGFU IN ('CONMX', 'PJDom', 'UPLCe', 'PJMX1', 'PRWMX', 'SbDom', 'SBMX1')",,,
+5,NWBOR,ECOGRP,5,NA,EcoNum>=0,,originally EcoNum>0,
+128,NWBOR,LGCLS,1,PSSap,(LGDS='P') or (LGDS='S'),,,
+129,NWBOR,LGCLS,2,ImmCon,"LGDS='I' AND LGFU IN ('BFDOM', 'CONMX', 'UPLCE', 'PJDOM', 'SBDOM', 'SBLOW', 'OCLOW', 'PJMX1', 'PRWMX', 'SBMX1')",,rewrote to all uppercase,
+130,NWBOR,LGCLS,3,ImmHwd,"LGDS='I' AND LGFU IN ('BWDOM', 'HRDMX', 'HRDOM', 'PODOM', 'OTHHD')",,rewrote to all uppercase,
+131,NWBOR,LGCLS,4,MLBfir,(LGDS='M' OR LGDS='L') AND LGFU='BFDOM',,rewrote to all uppercase,
+132,NWBOR,LGCLS,5,MLLCon,(LGDS='M' OR LGDS='L') AND (LGFU='SBLOW' OR LGFU='OCLOW'),,,
+133,NWBOR,LGCLS,6,MLHdMx,(LGDS='M' OR LGDS='L') AND (LGFU='BWDOM' OR LGFU='HRDMX' OR LGFU='HRDOM' OR LGFU='OTHHD' OR LGFU='PODOM'),,,
+134,NWBOR,LGCLS,7,MLUcMx,"(LGDS='M' OR LGDS='L') AND LGFU IN ('CONMX', 'PJDOM', 'UPLCE', 'PJMX1', 'PRWMX', 'SBDOM', 'SBMX1')",,rewrote to all uppercase,
 ,NWBOR,LGDS,1001,P,"(LGFU='PWDOM' AND AGE<10) OR 
 (LGFU='PRDOM' AND AGE<10) OR 
 (LGFU='PRWMX' AND AGE<10) OR 
 (LGFU='OCLOW' AND AGE<10) OR 
 (LGFU='SBLOW' AND AGE<10) OR 
-(LGFU='SbDom' AND AGE<10) OR 
-(LGFU='PJDom' AND AGE<10) OR 
+(LGFU='SBDOM' AND AGE<10) OR 
+(LGFU='PJDOM' AND AGE<10) OR 
 (LGFU='PODOM' AND AGE<5) OR 
 (LGFU='BWDOM' AND AGE<5) OR 
 (LGFU='OTHHD' AND AGE<5) OR 
@@ -357,7 +357,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 (LGFU='BFDOM' AND AGE<5) OR 
 (LGFU='CONMX' AND AGE<10) OR 
 (LGFU='HRDOM' AND AGE<5) OR 
-(LGFU='HRDMX' AND AGE<5)",,,
+(LGFU='HRDMX' AND AGE<5)",,rewrote to all uppercase,
 59,NWBOR,LGDS,1002,S,"(LGFU='PWDOM' AND AGE>=10 AND AGE<=19) OR 
 (LGFU='PRDOM' AND AGE>=10 AND AGE<=19) OR 
 (LGFU='PRWMX' AND AGE>=10 AND AGE<=19) OR 
@@ -395,9 +395,9 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 (LGFU='PRWMX' AND AGE>=80 AND AGE<=139) OR
 (LGFU='OCLOW' AND AGE>=70 AND AGE<=119) OR
 (LGFU='SBLOW' AND AGE>=70 AND AGE<=159) OR
-(LGFU='SbDom' AND AGE>=70 AND AGE<=119) OR
-(LGFU='PJDom' AND AGE>=70 AND AGE<=99) OR
-(LGFU='PODom' AND AGE>=60 AND AGE<=99) OR
+(LGFU='SBDOM' AND AGE>=70 AND AGE<=119) OR
+(LGFU='PJDOM' AND AGE>=70 AND AGE<=99) OR
+(LGFU='PODOM' AND AGE>=60 AND AGE<=99) OR
 (LGFU='BWDOM' AND AGE>=50 AND AGE<=109) OR
 (LGFU='OTHHD' AND AGE>=60 AND AGE<=99) OR
 (LGFU='SBMX1' AND AGE>=70 AND AGE<=109) OR
@@ -405,7 +405,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 (LGFU='BFDOM' AND AGE>=60 AND AGE<=79) OR
 (LGFU='CONMX' AND AGE>=70 AND AGE<=109) OR
 (LGFU='HRDOM' AND AGE>=60 AND AGE<=99) OR
-(LGFU='HRDMX' AND AGE>=60 AND AGE<=109)",,,
+(LGFU='HRDMX' AND AGE>=60 AND AGE<=109)",,rewrote to all uppercase,
 107,NWBOR,LGDS,1005,L,"(LGFU='PWDOM' AND AGE>129) OR
 (LGFU='PRDOM' AND AGE>149) OR
 (LGFU='PRWMX' AND AGE>139) OR
@@ -440,7 +440,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 136,NWBOR,PFT,2,PJK,SFU='PJSHA' or SFU='PJDEE',,,
 137,NWBOR,PFT,3,MCU,SFU='UPLCE' or SFU='SBSHA' or SFU='SBDEE' or SFU='SBMX1' or SFU='PJMX1' or SFU='BFPUR' or SFU='BFMX1',,,
 138,NWBOR,PFT,4,MCL,SFU='SBLOW' or SFU='OCLOW',,,
-139,NWBOR,PFT,5,MIX,SFU='HRDMW' or SFU='CONMX' or SFU='HRDOM',,,
+139,NWBOR,PFT,5,MIX,SFU='HRDMW' or SFU='CONMX' or SFU='HRDOM',,,had chat with J. Mucha - HRDOM may need to move to POP?
 140,NWBOR,PFT,6,POP,SFU='POSHA' or SFU='PODEE',,,
 141,NWBOR,PFT,7,BWT,SFU='BWSHA' or SFU='BWDEE',,,
 142,NWBOR,PFT,8,TOL,SFU='OTHHD',,,

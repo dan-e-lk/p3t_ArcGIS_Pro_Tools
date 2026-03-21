@@ -1,3 +1,5 @@
+# This is a working tool, but I can improve it by using Simplify Shared Edges instead of Simplify Polygon which creates gaps between polygons.
+
 # Originally scripted to clean SPCOMP95
 # Can be used to clean any polygon feature class
 # This is not designed to be a comprehensive cleaner tool for a particular inventory, but it is designed to be used on almost any polygon data, and deisgned to be batch run if needed.
