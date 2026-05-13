@@ -114,6 +114,19 @@ if __name__ == '__main__':
 	ARI_path = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_wFU.gdb'
 
 	join_info = {
+	# claybelt added in Apr 23, 2026
+	'Claybelt':		{'path': r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Other\CM13_Other.gdb\MNR_Lamb\Claybelt_n_Province',
+	 				'sql': None,
+	 				'keepf': ['Claybelt'],
+	 				'suffix':'',
+	 				},
+
+	'Region':		{'path': r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Other\CM13_Other.gdb\MNR_Lamb\FMU_FN_PARK_Boundary_Simp20m',
+	 				'sql': "MFZ = 'Y'",
+	 				'keepf': ['LG_REGION','SFU_REGION'], # SFU_REGION exists in spcomp95
+	 				'suffix':'',
+	 				},
+
 	'EventLayer': 	{'path':r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\EventLayers\Event2002to2023.gdb\NEO4\NEO_fin',
 					'fcname': None, # only if your 'path' is a gdb
 					'sql': None, 
@@ -133,11 +146,11 @@ if __name__ == '__main__':
 	 				'suffix':'range',
 	 				},	 	
 
-	'spcomp95':		{'path': r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\SpComp95\SPCOMP95_mod_v2026.gdb\SPCOMP95_wSFU', 
-	 				'sql': None,
-	 				'keepf': ['SPCOMP','SFU_REGION','ECONUM','SFU','PFT','LGFU'],
-	 				'suffix':'spc95',
-	 				},
+	# 'spcomp95':		{'path': r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\SpComp95\SPCOMP95_mod_v2026.gdb\SPCOMP95_wSFU', 
+	#  				'sql': None,
+	#  				'keepf': ['SPCOMP','SFU_REGION','ECONUM','SFU','PFT','LGFU'],
+	#  				'suffix':'spc95',
+	#  				},
 
 	'Harvest':		{'path': os.path.join(ARAR_path,'Harvest','HRV_All_02_n_up'),
 	 				'sql': None,
@@ -179,13 +192,12 @@ if __name__ == '__main__':
 	 				'sql': "POLYTYPE = 'FOR'",
 	 				'keepf': ['YRSOURCE','SOURCE','DEVSTAGE','YRDEP','SILVSYS','DEPTYPE','YRORG','LEADSPC','SPCOMP','AGE','HT','CCLO','STKG','SC','PLANFU','SGR','SFU','LGFU','PFT'],
 	 				'suffix':'ARI25',
-	 				},	 				
+	 				},	
 	}
 
-	# add 2011 FRI T1
 	# add KMB stuff as they come in
 	# add RAP?
-
+	# X add 2011 FRI T1
 
 
 	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',

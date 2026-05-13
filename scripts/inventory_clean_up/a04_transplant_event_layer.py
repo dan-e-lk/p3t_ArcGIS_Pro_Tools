@@ -72,7 +72,8 @@ def transplant_event_layer(event_lyr,clean02_inv_gdb,output_gdb,mu_list,para,ste
 					# loop through fields that can be updated
 					for neofield in neofields:
 						new_value = row[f.index("NEO_%s"%neofield)]
-						if new_value != None:
+						# if new_value != None: # I edited this in 20260512 - found some EST SPCOMP with '-'
+						if new_value != None or new_value != '-': # make this more versatile - what if the new_value is '' or sth else?
 							row[f.index(neofield)] = new_value
 					cursor.updateRow(row)
 			logger.print2("\t\tDone")

@@ -1,4 +1,5 @@
-# Add WTX!!!
+# added export to excel in 2026 05, but the excel file opens with an error message...
+# future work - I think it'd be best to export them one by one instead all in one excel file.
 
 # this tool is used to update the ARAR on AGOL. When you have a new AR Master, use 01_AR_AR.py to create ARAR.gdb. 
 # Then use this script to turn it into geopackage files which you can use to overwrite each of the ARAR layers already existing on AGOL
@@ -27,6 +28,18 @@ simp_poly_min_m2 = 2000 # anything less than this will be excluded
 simp_line_tol_m = 8
 simp_line_min_m = 15 # anything less than this will be excluded
 
+# these are FCs in ARAR to be simplified
+fc_list = {
+'EST_Y_02_n_up':'polygon',
+'HRV_All_02_n_up':'polygon',
+'Regen_All_02_n_up':'polygon',
+'SIP_All_02_n_up':'polygon',
+'Tend_All_02_n_up':'polygon',
+'SGR_flat_08_n_up':'polygon',
+'Roads_All_06_n_up':'polyline',
+'AGG_08_n_up':'point',
+'WTX_08_n_up':'point'}
+
 
 def ARAR_to_gp(input_arar, out_gdb, gp_output_folder):
 	
@@ -36,17 +49,6 @@ def ARAR_to_gp(input_arar, out_gdb, gp_output_folder):
 	# Reference the current project and map
 	aprx = arcpy.mp.ArcGISProject("CURRENT")
 	m = aprx.activeMap
-	# these are FCs in ARAR to be simplified
-	fc_list = {
-	'EST_Y_02_n_up':'polygon',
-	'HRV_All_02_n_up':'polygon',
-	'Regen_All_02_n_up':'polygon',
-	'SIP_All_02_n_up':'polygon',
-	'Tend_All_02_n_up':'polygon',
-	'SGR_flat_08_n_up':'polygon',
-	'Roads_All_06_n_up':'polyline',
-	'AGG_08_n_up':'point',
-	'WTX_08_n_up':'point'}
 
 	new_fc_list = []
 
@@ -161,8 +163,25 @@ def ARAR_to_gp(input_arar, out_gdb, gp_output_folder):
 
 	# open the output folder when done.
 	os.startfile(gp_output_folder)
+	logger.print2("Export to geopackage Complete")
 
 
+def export_as_excel(input_arar, gp_output_folder):
+
+	logger.print2("\n\nExporting as Excel...")
+	arcpy.env.workspace = input_arar
+	inputs = list(fc_list.keys())
+	output_excel_filename = os.path.join(gp_output_folder,"AnalysisReady_AR.xlsx")
+	logger.print2("inputs: %s\noutput: %s"%(inputs,output_excel_filename))
+
+	arcpy.conversion.TableToExcel(
+    # Input_Table=r"ARAR\2026Auditors\EST_Y_02_n_up;ARAR\2026Auditors\HRV_All_02_n_up;ARAR\2026Auditors\Regen_All_02_n_up;ARAR\2026Auditors\Roads_All_06_n_up;ARAR\2026Auditors\SIP_All_02_n_up;ARAR\2026Auditors\Tend_All_02_n_up",
+    Input_Table=inputs,
+    Output_Excel_File=output_excel_filename,
+    Use_field_alias_as_column_header="NAME",
+    Use_domain_and_subtype_description="CODE"
+	)
+	logger.print2("Export to Excel Complete")
 
 
 
@@ -170,8 +189,9 @@ if __name__ == '__main__':
 	
 	# gather inputs
 	input_arar = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\D\AR\AnalysisReadyAR.gdb'
-	out_gdb = r'C:\Users\KimDan\OneDrive - Government of Ontario\_FPPS\Projects\AGOL_everything\AR\ARAR_Simplified.gdb' # this gdb can be empty, but must already exist
-	gp_output_folder = r'C:\Users\kimdan\OneDrive - Government of Ontario\_FPPS\Projects\AGOL_everything\AR\arar_to_gp_output'
+	out_gdb = r'C:\Users\KimDan\OneDrive - Government of Ontario\_FPPS\Projects\AGOL_everything\AR\ARAR_Simplified.gdb' # must already exist. Will be overwritten with the new data.
+	gp_output_folder = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - Packaged_Data\AR_Master\AnalysisReadyAR\GeoPackage'
+	also_export_excel = True
 
 	######### logfile stuff
 
@@ -195,6 +215,8 @@ if __name__ == '__main__':
 
 	# run the main function(s)
 	ARAR_to_gp(input_arar, out_gdb, gp_output_folder)
+	if also_export_excel:
+		export_as_excel(input_arar, gp_output_folder)
 
 	# finish writing the logfile
 	logger.log_close()
