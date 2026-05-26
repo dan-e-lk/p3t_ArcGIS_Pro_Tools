@@ -1,6 +1,7 @@
 # prerequisite:
 # Must already have run 01 make event layer - have NEO_fin layer.
 # Must alreayd have the hex grid for each MU. (run custom_GIS_Tools/generate_hex_for_each_polygon.py)
+# H3 Hex at resolution 11 for each MU is available here: C:\Users\KimDan\Government of Ontario\Forest Explorer - Packaged_Data\Hexagon_H3\Hex_by_FMU
 
 
 # We have the event layer - NEO_fin will be used since it has all human and natural disturbance and activities included.
@@ -77,17 +78,19 @@ if __name__ == '__main__':
 	
 	# gather inputs
 	neofin_path = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\EventLayers\Event2002to2023.gdb\NEO4\NEO_fin'
-	Neofin_select_sql = 'NEO_YRDEP IS NOT NULL' # this is the base sql. more sql will be added. eg. ' AND INV_NAME = 'FC443'
+	Neofin_select_sql = """NEO_YRDEP IS NOT NULL AND NEO_DEPTYPE = 'HARVEST'""" # this is the base sql. more sql will be added. eg. ' AND INV_NAME = 'FC443'
 
-	hex_grid_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test\test_Hex11.gdb' # will have layers such as 'f_443' and 'f_816'
-	out_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test\HexBase.gdb'
+	# hex_grid_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test\test_Hex11.gdb' # will have layers such as 'f_443' and 'f_816'
+	hex_grid_gdb = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - Packaged_Data\Hexagon_H3\Hex_by_FMU\FMU_at11.gdb' 
+	out_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test2\HexBase2.gdb' # must already exist.
 
 
 	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
 			'FC230', 'FC280', 'FC350', 'FC360', 'FC390', 'FC406', 'FC415', 'FC421', 'FC438', 'FC443',
 			'FC451', 'FC490', 'FC535', 'FC574', 'FC601', 'FC615', 'FC644', 'FC680', 'FC702', 'FC754',
 			'FC780', 'FC796', 'FC816', 'FC840', 'FC889', 'FC898', 'FC930', 'FC966', 'FC994'] # 39 MUs
-	mu_list = ['FC443','FC816']
+	# mu_list = ['FC443','FC816']
+	mu_list = ['FC443','FC816','FC110','FC702'] # 2nd test
 
 
 

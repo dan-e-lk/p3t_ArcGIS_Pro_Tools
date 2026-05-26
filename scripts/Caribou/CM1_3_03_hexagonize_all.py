@@ -1,6 +1,7 @@
 # prerequisite:
 # Must already have run 02 create base hex per MU - must already have a gdb that contains layers such as f_443_base
 
+# expect this to take about 5mins per FMU to run.
 
 # workflow:
 # - loop through the mu_list
@@ -99,17 +100,17 @@ def hexagonizer(hex_base_gdb,out_gdb,join_info,mu_list,express_run):
 
 
 
-
 	logger.print2("\nDone!")
-
 
 
 
 if __name__ == '__main__':
 	
 	# gather inputs
-	hex_base_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test\HexBase.gdb' # will have layers such as 'f_443' and 'f_816'
-	out_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test\HexJoin.gdb' # must already exist
+	hex_base_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test2\HexBase2.gdb' # will have layers such as 'f_443' and 'f_816'
+	out_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test2\HexJoin2.gdb' # must already exist
+
+	# probably leave these as is
 	ARAR_path = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - Data\D\AR\AnalysisReadyAR.gdb'
 	ARI_path = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - FRO\FRO2026\02InventoryCleanUp\ARI_wFU.gdb'
 
@@ -117,16 +118,17 @@ if __name__ == '__main__':
 	# claybelt added in Apr 23, 2026
 	'Claybelt':		{'path': r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Other\CM13_Other.gdb\MNR_Lamb\Claybelt_n_Province',
 	 				'sql': None,
-	 				'keepf': ['Claybelt'],
-	 				'suffix':'',
+	 				'keepf': ['CLAYBELT'],
+	 				'suffix':'claybelt',
 	 				},
 
 	'Region':		{'path': r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Other\CM13_Other.gdb\MNR_Lamb\FMU_FN_PARK_Boundary_Simp20m',
 	 				'sql': "MFZ = 'Y'",
 	 				'keepf': ['LG_REGION','SFU_REGION'], # SFU_REGION exists in spcomp95
-	 				'suffix':'',
+	 				'suffix':'region',
 	 				},
 
+	 # Keep event layer for now (but probably don't need to keep all these fields)
 	'EventLayer': 	{'path':r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\EventLayers\Event2002to2023.gdb\NEO4\NEO_fin',
 					'fcname': None, # only if your 'path' is a gdb
 					'sql': None, 
@@ -136,7 +138,7 @@ if __name__ == '__main__':
 
 	'Backcast':		{'path': r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\INV\backcast.gdb\MU$MUNO$', # $MUNO$ will be replaced by one of the items in the mu_list variable below (replaced by numbers - without the 'FC')
 	 				'sql': None,
-	 				'keepf': ['EVENT_LOG', 'ECONUM', 'LGAGE_2002', 'LGFU_GLSL_2002', 'LGFU_NER_2002', 'LGFU_NWR_2002','LGAGE_2023', 'LGFU_GLSL_2023', 'LGFU_NER_2023', 'LGFU_NWR_2023'],
+	 				'keepf': ['EVENT_LOG', 'LGAGE_2002', 'LGFU_GLSL_2002', 'LGFU_NER_2002', 'LGFU_NWR_2002','LGAGE_2023', 'LGFU_GLSL_2023', 'LGFU_NER_2023', 'LGFU_NWR_2023'],
 	 				'suffix':'backcast',
 	 				},
 
@@ -190,9 +192,9 @@ if __name__ == '__main__':
 
 	'ARI25':		{'path': os.path.join(ARI_path,'FC$MUNO$'),
 	 				'sql': "POLYTYPE = 'FOR'",
-	 				'keepf': ['YRSOURCE','SOURCE','DEVSTAGE','YRDEP','SILVSYS','DEPTYPE','YRORG','LEADSPC','SPCOMP','AGE','HT','CCLO','STKG','SC','PLANFU','SGR','SFU','LGFU','PFT'],
+	 				'keepf': ['YRSOURCE','SOURCE','DEVSTAGE','YRDEP','SILVSYS','DEPTYPE','YRORG','LEADSPC','SPCOMP','AGE','HT','CCLO','STKG','SC','PLANFU','SGR','SFU','LGFU','PFT','ECONUM'],
 	 				'suffix':'ARI25',
-	 				},	
+	 				},
 	}
 
 	# add KMB stuff as they come in
@@ -204,7 +206,8 @@ if __name__ == '__main__':
 			'FC230', 'FC280', 'FC350', 'FC360', 'FC390', 'FC406', 'FC415', 'FC421', 'FC438', 'FC443',
 			'FC451', 'FC490', 'FC535', 'FC574', 'FC601', 'FC615', 'FC644', 'FC680', 'FC702', 'FC754',
 			'FC780', 'FC796', 'FC816', 'FC840', 'FC889', 'FC898', 'FC930', 'FC966', 'FC994'] # 39 MUs
-	mu_list = ['FC443','FC816']
+	# mu_list = ['FC443','FC816']
+	mu_list = ['FC110','FC702','FC443','FC816']
 
 	express_run = False
 
