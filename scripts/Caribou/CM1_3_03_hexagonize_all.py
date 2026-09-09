@@ -107,8 +107,8 @@ def hexagonizer(hex_base_gdb,out_gdb,join_info,mu_list,express_run):
 if __name__ == '__main__':
 	
 	# gather inputs
-	hex_base_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test2\HexBase2.gdb' # will have layers such as 'f_443' and 'f_816'
-	out_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test2\HexJoin2.gdb' # must already exist
+	hex_base_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Draft\HexBase6.gdb' # output from 02 script run. will have layers such as 'f_443' and 'f_816'
+	out_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Draft\HexJoin6.gdb' # must already exist (empty gdb)
 
 	# probably leave these as is
 	ARAR_path = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - Data\D\AR\AnalysisReadyAR.gdb'
@@ -128,19 +128,20 @@ if __name__ == '__main__':
 	 				'suffix':'region',
 	 				},
 
-	 # Keep event layer for now (but probably don't need to keep all these fields)
+	 # Keep event layer - need this because this still is the base layer for all (but don't need to keep all these fields)
 	'EventLayer': 	{'path':r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\EventLayers\Event2002to2023.gdb\NEO4\NEO_fin',
 					'fcname': None, # only if your 'path' is a gdb
 					'sql': None, 
-					'keepf': ['NEO_YRSOURCE', 'NEO_SOURCE', 'NEO_YRDEP', 'NEO_DEPTYPE', 'NEO_DEVSTAGE', 'NEO_STKG', 'NEO_YRORG', 'NEO_AGE', 'NEO_CCLO', 'NEO_SILVSYS', 'NEO_SPCOMP', 'NEO_PLANFU', 'NEO_YIELD', 'NEO_SGR', 'NEO_LEADSPC'], 
+					# 'keepf': ['NEO_YRSOURCE', 'NEO_SOURCE', 'NEO_YRDEP', 'NEO_DEPTYPE', 'NEO_DEVSTAGE', 'NEO_STKG', 'NEO_YRORG', 'NEO_AGE', 'NEO_CCLO', 'NEO_SILVSYS', 'NEO_SPCOMP', 'NEO_PLANFU', 'NEO_YIELD', 'NEO_SGR', 'NEO_LEADSPC'], 
+					'keepf': ['NEO_YRDEP', 'NEO_DEPTYPE', 'NEO_SGR'], 
 					'suffix':'event',
 					},
 
-	'Backcast':		{'path': r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\INV\backcast.gdb\MU$MUNO$', # $MUNO$ will be replaced by one of the items in the mu_list variable below (replaced by numbers - without the 'FC')
-	 				'sql': None,
-	 				'keepf': ['EVENT_LOG', 'LGAGE_2002', 'LGFU_GLSL_2002', 'LGFU_NER_2002', 'LGFU_NWR_2002','LGAGE_2023', 'LGFU_GLSL_2023', 'LGFU_NER_2023', 'LGFU_NWR_2023'],
-	 				'suffix':'backcast',
-	 				},
+	# 'Backcast':		{'path': r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\INV\backcast.gdb\MU$MUNO$', # $MUNO$ will be replaced by one of the items in the mu_list variable below (replaced by numbers - without the 'FC')
+	#  				'sql': None,
+	#  				'keepf': ['EVENT_LOG', 'LGAGE_2002', 'LGFU_GLSL_2002', 'LGFU_NER_2002', 'LGFU_NWR_2002','LGAGE_2023', 'LGFU_GLSL_2023', 'LGFU_NER_2023', 'LGFU_NWR_2023'],
+	#  				'suffix':'backcast',
+	#  				},
 
 	'CaribRange':	{'path': r'C:\Users\KimDan\Government of Ontario\Forest Explorer - Data\D\GeoData\Caribou2024\Caribou20240426.gdb\CRB_Ranges_ALL', 
 	 				'sql': None,
@@ -155,24 +156,32 @@ if __name__ == '__main__':
 	#  				},
 
 	'Harvest':		{'path': os.path.join(ARAR_path,'Harvest','HRV_All_02_n_up'),
-	 				'sql': None,
-	 				'keepf': ['GRID_ID', 'FMU_CODE', 'BLOCKID', 'HARVCAT', 'SILVSYS', 'HARVMTHD', 'MGMTSTG', 'ESTAREA', 'SGR', 'DSTBFU', 'TARGETFU', 'TARGETYD', 'TRIAL', 'LOGMTHD', 'AR_YEAR'],
+	 				'sql': "HARVCAT NOT IN ('ROADROW','THINCOM')",
+	 				'keepf': ['BLOCKID', 'HARVCAT', 'SILVSYS', 'SGR', 'DSTBFU', 'TARGETFU', 'AR_YEAR'],
 	 				'suffix':'hrv',
 	 				},
 
 	'Regen':		{'path': os.path.join(ARAR_path,'Regen','Regen_All_02_n_up'),
 	 				'sql': None,
-	 				'keepf': ['ESTAREA', 'AR_YEAR', 'SP1', 'SP2', 'TRTMTHD1', 'TRTCAT1', 'PLANTNO', 'ESTAREA2', 'AR_YEAR2', 'SP12', 'SP22'],
+	 				'keepf': ['AR_YEAR', 'SP1', 'SP2', 'TRTMTHD1', 'TRTCAT1'],
 	 				'suffix':'rgn',
 	 				},
 
-	'EST':			{'path': os.path.join(ARAR_path,'EST','EST_Y_02_n_up'),
+	# 'EST':			{'path': os.path.join(ARAR_path,'EST','EST_Y_02_n_up'),
+	#  				'sql': None,
+	#  				'keepf': ['ARDSTGRP', 'SILVSYS', 'AGEEST', 'YRDEP', 'DSTBFU', 'SGR', 'TARGETFU', 'TARGETYD', 'ESTFU', 'ESTYIELD', 'SPCOMP', 'HT', 'DENSITY', 'STKG', 'AR_YEAR'],
+	#  				'suffix':'est',
+	#  				},
+
+	# EST+KBM
+	'EST':			{'path': r"C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\KBM_data\InterpData_mod.gdb\C04_ARAR_EST_Append_KBM_RegenSurvey",
 	 				'sql': None,
-	 				'keepf': ['ARDSTGRP', 'SILVSYS', 'AGEEST', 'YRDEP', 'DSTBFU', 'SGR', 'TARGETFU', 'TARGETYD', 'ESTFU', 'ESTYIELD', 'SPCOMP', 'HT', 'DENSITY', 'STKG', 'AR_YEAR'],
+	 				'keepf': ['ARDSTGRP', 'SILVSYS', 'YRDEP', 'DSTBFU', 'SGR', 'TARGETFU', 'ESTFU', 'SPCOMP', 'DENSITY', 'STKG', 'AR_YEAR'],
 	 				'suffix':'est',
 	 				},
 
-	'SGR':			{'path': os.path.join(ARAR_path,'SGR','SGR_08_n_up'),
+	# Use SGR Flat - only the latest SGR
+	'SGR':			{'path': os.path.join(ARAR_path,'SGR','SGR_08_n_up'), 
 	 				'sql': None,
 	 				'keepf': ['AR_YEAR', 'SGR','TARGETFU','TARGETYD'],
 	 				'suffix':'sgr',
@@ -192,22 +201,31 @@ if __name__ == '__main__':
 
 	'ARI25':		{'path': os.path.join(ARI_path,'FC$MUNO$'),
 	 				'sql': "POLYTYPE = 'FOR'",
-	 				'keepf': ['YRSOURCE','SOURCE','DEVSTAGE','YRDEP','SILVSYS','DEPTYPE','YRORG','LEADSPC','SPCOMP','AGE','HT','CCLO','STKG','SC','PLANFU','SGR','SFU','LGFU','PFT','ECONUM'],
+	 				# 'keepf': ['YRSOURCE','SOURCE','DEVSTAGE','YRDEP','SILVSYS','DEPTYPE','YRORG','LEADSPC','SPCOMP','AGE','HT','CCLO','STKG','SC','PLANFU','SGR','SFU','LGFU','PFT','ECONUM'],
+	 				'keepf': ['ECONUM'],
 	 				'suffix':'ARI25',
 	 				},
 	}
 
-	# add KMB stuff as they come in
-	# add RAP?
-	# X add 2011 FRI T1
+	# added KBM stuff - replaced the EST with EST+KBM
 
 
-	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
-			'FC230', 'FC280', 'FC350', 'FC360', 'FC390', 'FC406', 'FC415', 'FC421', 'FC438', 'FC443',
-			'FC451', 'FC490', 'FC535', 'FC574', 'FC601', 'FC615', 'FC644', 'FC680', 'FC702', 'FC754',
-			'FC780', 'FC796', 'FC816', 'FC840', 'FC889', 'FC898', 'FC930', 'FC966', 'FC994'] # 39 MUs
+
+	# mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
+	# 		'FC230', 'FC280', 'FC350', 'FC360', 'FC390', 'FC406', 'FC415', 'FC421', 'FC438', 'FC443',
+	# 		'FC451', 'FC490', 'FC535', 'FC574', 'FC601', 'FC615', 'FC644', 'FC680', 'FC702', 'FC754',
+	# 		'FC780', 'FC796', 'FC816', 'FC840', 'FC889', 'FC898', 'FC930', 'FC966', 'FC994'] # 39 MUs
 	# mu_list = ['FC443','FC816']
-	mu_list = ['FC110','FC702','FC443','FC816']
+	# mu_list = ['FC110','FC702','FC443','FC816']
+	mu_list = ['FC060','FC350','FC615','FC966'] # Test #4
+
+	# v6 run (draft run)
+	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC175',
+			'FC230', 'FC350', 'FC390', 'FC415', 'FC438', 'FC443',
+			'FC490', 'FC601', 'FC615', 'FC644', 'FC702',
+			'FC796', 'FC816', 'FC840', 'FC930', 'FC966', 'FC994'] # (draft run) Caribou MUs (excluding Timiskaming and wabigon)
+
+	# use SGR Flat
 
 	express_run = False
 

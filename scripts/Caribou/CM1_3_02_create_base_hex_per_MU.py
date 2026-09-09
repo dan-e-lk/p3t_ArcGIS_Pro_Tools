@@ -82,16 +82,22 @@ if __name__ == '__main__':
 
 	# hex_grid_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test\test_Hex11.gdb' # will have layers such as 'f_443' and 'f_816'
 	hex_grid_gdb = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - Packaged_Data\Hexagon_H3\Hex_by_FMU\FMU_at11.gdb' 
-	out_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test2\HexBase2.gdb' # must already exist.
+	out_gdb = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Draft\HexBase6.gdb' # must already exist.
 
 
-	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
-			'FC230', 'FC280', 'FC350', 'FC360', 'FC390', 'FC406', 'FC415', 'FC421', 'FC438', 'FC443',
-			'FC451', 'FC490', 'FC535', 'FC574', 'FC601', 'FC615', 'FC644', 'FC680', 'FC702', 'FC754',
-			'FC780', 'FC796', 'FC816', 'FC840', 'FC889', 'FC898', 'FC930', 'FC966', 'FC994'] # 39 MUs
+	# mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC130', 'FC140', 'FC175', 'FC177', 'FC210', 'FC220',
+	# 		'FC230', 'FC280', 'FC350', 'FC360', 'FC390', 'FC406', 'FC415', 'FC421', 'FC438', 'FC443',
+	# 		'FC451', 'FC490', 'FC535', 'FC574', 'FC601', 'FC615', 'FC644', 'FC680', 'FC702', 'FC754',
+	# 		'FC780', 'FC796', 'FC816', 'FC840', 'FC889', 'FC898', 'FC930', 'FC966', 'FC994'] # 39 MUs
 	# mu_list = ['FC443','FC816']
-	mu_list = ['FC443','FC816','FC110','FC702'] # 2nd test
-
+	# mu_list = ['FC443','FC816','FC110','FC702'] # 2nd test
+	# mu_list = ['FC060','FC350','FC615','FC966'] # Test #4
+	
+	# v6 run (draft run)
+	mu_list = ['FC035', 'FC060', 'FC110', 'FC120', 'FC175',
+			'FC230', 'FC350', 'FC390', 'FC415', 'FC438', 'FC443',
+			'FC490', 'FC601', 'FC615', 'FC644', 'FC702',
+			'FC796', 'FC816', 'FC840', 'FC930', 'FC966', 'FC994'] # (draft run) Caribou MUs (excluding Timiskaming and wabigon)
 
 
 	######### logfile stuff

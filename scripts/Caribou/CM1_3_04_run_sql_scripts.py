@@ -1,6 +1,7 @@
 # Probably good idea to create a back up of your main sqlite3 before running all these queries.
 
-# Do this after 03_hexagonize_all + running gdb to sqlite.
+# Do this after 03_hexagonize_all + running gdb-to-sqlite.
+# No need ArcGIS to run this script.
 # in the same parent forlder as db_path, you should have lut_sqlite3 - this is the look up table for SGRs and Forest Units.
 
 
@@ -88,22 +89,31 @@ def replace_in_sql_file(file_path, to_be_replaced, replace_it_with):
 if __name__ == '__main__':
 
     # workspace folder should contain the sqls as well as the 2 sqlite files: HexJoin.sqlite3 and lut.sqlite3
-    workspace = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test2'
-    lut_db_fullpath = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test2\lut.sqlite3'
+    workspace = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Draft'
+    lut_db_fullpath = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Draft\lut.sqlite3'
 
     # the following files must already exist in the workspace folder
-    db_name = 'HexJoin2.sqlite3'
-    sql_scripts = ["10_ARI_ECONUM_to_ECOGRP.sql", "11_HexJoin_joinTables_short.sql", "12_HexJoin_join_LUTs.sql", "13_HexJoin_dissolve.sql"]
+    db_name = 'HexJoin6.sqlite3'
+    sql_scripts = ["12_HexJoin_join_LUTs.sql"]
     # sql_scripts = ["10_ARI_ECONUM_to_ECOGRP.sql", "11_HexJoin_joinTables_short.sql", "12_HexJoin_join_LUTs.sql"]
 
-    # above sql scripts has the following mu as default. eg. 'f_816'
-    mu_default = 'f_816'
-
     # variables for the output csv file
-    csv_folderpath = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Test2\for_tableau'
+    csv_folderpath = r'C:\Users\KimDan\Government of Ontario\Caribou Explorer - CM1_3\Data\Analysis\Hexagon_Draft\for_tableau'
 
     # mu to loop
-    mu_list = ['110']
+    # mu_list = ['060',]
+    # mu_list = ['350','615','966']
+    mu_list = ['060','350','615','966']
+    mu_list = ['035', '060', '110', '120', '175',
+        '230', '350', '390', '415', '438', '443',
+        '490', '601', '615', '644', '702',
+        '796', '816', '840', '930', '966', '994'] 
+
+
+    # No need to change the following variable.
+    # above sql scripts has the following mu as default. eg. 'f_816'
+    # normally you don't have to chnage this unless you've edited *.sql files above.
+    mu_default = 'f_816'
 
     ############################################################
 
@@ -127,6 +137,7 @@ if __name__ == '__main__':
                 if len(table_name_lst) > 0:
                     out_tables = sql_output['new_tables']
                     print("\t\tNew Tables: %s"%out_tables)
+                print("\n\n")
             else:
                 print("\t\t!!! SQL query failed !!!")
                 print("%s"%sql_output['message'])

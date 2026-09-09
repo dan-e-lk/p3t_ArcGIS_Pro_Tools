@@ -205,7 +205,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 302,NEBOR,ECOGRP,3,PineES,"ECONUM IN (12,34,35,49,50)",,,Econum = 12 or Econum = 34 or Econum = 49 or Econum = 35 or Econum = 50
 303,NEBOR,ECOGRP,4,ShalES,"ECONUM IN (11,12,14,15,16,17,18,19,23,24,25,26,27,28)",,,Econum = 11 or Econum = 12 or Econum = 14 or Econum = 15 or Econum = 16 or Econum = 17 or Econum = 18 or Econum = 19 or Econum = 23 or Econum = 24 or Econum = 25 or Econum = 26 or Econum = 27 or Econum = 28
 304,NEBOR,ECOGRP,5,NA,EcoNum>=0,,originally EcoNum>0,Careful when using 'NA'. some scripts automatically change this to 'nan'
-480,NEBOR,LGCLS,1,Bog,(LGFU='Bog'),,,
+480,NEBOR,LGCLS,1,SBOG,(LGFU='SBOG'),,changed Bog to SBOG,
 481,NEBOR,LGCLS,2,PSSap,((LGDS='P')  or  (LGDS='S')),,,
 482,NEBOR,LGCLS,3,ImLPine,((LGFU='PJ1') or (LGFU='PR1')) and ((LGDS='I') or  (LGDS='M') or  (LGDS='L')),,,
 483,NEBOR,LGCLS,4,ImmCon,((LGDS='I')  and  ((LGFU='SB1') or (LGFU='LC1') or (LGFU='SF1') or (LGFU='SP1') or (LGFU='PRW') or (LGFU='PJ2'))),,,
@@ -228,7 +228,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 (LGFU='PJ2' AND AGE>=70 AND AGE<=109) OR
 (LGFU='SF1' AND AGE>=80 AND AGE<=109) OR
 (LGFU='MW2' AND AGE>=70 AND AGE<=99) OR
-(LGFU='BOG' AND AGE>=80 AND AGE<=119)",can be deleted unless NER LGFU actually has PW1,,
+(LGFU='SBOG' AND AGE>=80 AND AGE<=119)",,changed Bog to SBOG,
 456,NEBOR,LGDS,57,L,"(LGFU='PW1' AND AGE>129) OR
 (LGFU='PR1' AND AGE>129) OR
 (LGFU='PRW' AND AGE>129) OR
@@ -243,7 +243,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 (LGFU='PJ2' AND AGE>109) OR
 (LGFU='SF1' AND AGE>109) OR
 (LGFU='MW2' AND AGE>99) OR
-(LGFU='BOG' AND AGE>=120)",can be deleted unless NER LGFU actually has PW1,,
+(LGFU='SBOG' AND AGE>=120)",,changed Bog to SBOG,
 400,NEBOR,LGDS,1001,P,"(LGFU='PW1' AND AGE>=0 AND AGE<15) OR
 (LGFU='PR1' AND AGE>0 AND AGE<15) OR
 (LGFU='PRW' AND AGE>=0 AND AGE<15) OR
@@ -258,7 +258,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 (LGFU='PJ2' AND AGE>=0 AND AGE<10) OR
 (LGFU='SF1' AND AGE>=0 AND AGE<15) OR
 (LGFU='MW2' AND AGE>=0 AND AGE<10) OR
-(LGFU='BOG' AND AGE>=0 AND AGE<20)",can be deleted unless NER LGFU actually has PW1,,
+(LGFU='SBOG' AND AGE>=0 AND AGE<20)",,changed Bog to SBOG,
 414,NEBOR,LGDS,1002,S,"(LGFU='PW1' AND AGE>=15 AND AGE<=39) OR
 (LGFU='PR1' AND AGE>=15 AND AGE<=39) OR
 (LGFU='PRW' AND AGE>=15 AND AGE<=39) OR
@@ -273,7 +273,7 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 (LGFU='PJ2' AND AGE>=10 AND AGE<=29) OR
 (LGFU='SF1' AND AGE>=15 AND AGE<=39) OR
 (LGFU='MW2' AND AGE>=10 AND AGE<=29) OR
-(LGFU='BOG' AND AGE>=20 AND AGE<=39)",can be deleted unless NER LGFU actually has PW1,,
+(LGFU='SBOG' AND AGE>=20 AND AGE<=39)",,changed Bog to SBOG,
 428,NEBOR,LGDS,1003,I,"(LGFU='PW1' AND AGE>=40 AND AGE<=79) OR
 (LGFU='PR1' AND AGE>=40 AND AGE<=79) OR
 (LGFU='PRW' AND AGE>=40 AND AGE<=79) OR
@@ -288,11 +288,11 @@ RECNO,REGION,FIELD,SQL_ORDER,SQL_NAME,SQL_SYNTAX,EASY_NAME,Edited,Comments
 (LGFU='PJ2' AND AGE>=30 AND AGE<=69) OR
 (LGFU='SF1' AND AGE>=40 AND AGE<=79) OR
 (LGFU='MW2' AND AGE>=30 AND AGE<=69) OR
-(LGFU='BOG' AND AGE>=40 AND AGE<=79)",can be deleted unless NER LGFU actually has PW1,,
+(LGFU='SBOG' AND AGE>=40 AND AGE<=79)",,changed Bog to SBOG,
 350,NEBOR,LGFU,1,PR1,SFU='PR1',,,This maps NER LGFU directly with NER SFU
 351,NEBOR,LGFU,2,PRW,"SFU in ('PW1','PRW')",,,This maps NER LGFU directly with NER SFU
 356,NEBOR,LGFU,3,LH1,"SFU IN ('LH1','TH1')",,,This maps NER LGFU directly with NER SFU
-359,NEBOR,LGFU,4,BOG,SFU = 'SBOG',,,This maps NER LGFU directly with NER SFU
+359,NEBOR,LGFU,4,SBOG,SFU = 'SBOG',,changed Bog to SBOG,This maps NER LGFU directly with NER SFU
 360,NEBOR,LGFU,5,SB1,SFU = 'SB1',,,This maps NER LGFU directly with NER SFU
 362,NEBOR,LGFU,6,PJ1,SFU = 'PJ1',,,This maps NER LGFU directly with NER SFU
 364,NEBOR,LGFU,7,LC1,"SFU in ('LC1','UPCE')",,,This maps NER LGFU directly with NER SFU
