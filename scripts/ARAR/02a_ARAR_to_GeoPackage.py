@@ -191,7 +191,7 @@ if __name__ == '__main__':
 	input_arar = r'C:\Users\kimdan\Government of Ontario\Forest Explorer - Data\D\AR\AnalysisReadyAR.gdb'
 	out_gdb = r'C:\Users\KimDan\OneDrive - Government of Ontario\_FPPS\Projects\AGOL_everything\AR\ARAR_Simplified.gdb' # must already exist. Will be overwritten with the new data.
 	gp_output_folder = r'C:\Users\KimDan\Government of Ontario\Forest Explorer - Packaged_Data\AR_Master\AnalysisReadyAR\GeoPackage'
-	also_export_excel = True
+	also_export_excel = False
 
 	######### logfile stuff
 

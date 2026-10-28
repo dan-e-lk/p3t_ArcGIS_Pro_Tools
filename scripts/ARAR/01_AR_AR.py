@@ -232,9 +232,12 @@ Mechanical Site Prep layer usually has the most records (~80k).
 		oldname_newname = {
 		'agg_pits': 'AGG_08_n_up',
 		'SGR_Flat': 'SGR_flat_08_n_up',
-		'Water_Xing': 'WTX_08_n_up'
+		'water_Xing': 'WTX_08_n_up',
+		'slash_chip_trt': 'SCT_13_n_up',
+		'ACP_24': 'ACP_24_n_up',
+		'WSY_24': 'WSY_24_n_up'
 		}
-		note = "Copying over SGR_Flat, agg_pits, and Water_Xing"
+		note = "Copying over SGR_Flat, agg_pits, water_crossing, slash and chip, access points, and storage y"
 
 		# create feature dataset
 		self.logger.print2("\n## Working on %s"%DS_name)
@@ -278,12 +281,12 @@ if __name__ == '__main__':
 
 	#### below: you can comment out the ones that you don't need to run
 	## Rolling up all fcs in the same category into a single fc.
-	ar.harvest()
-	ar.est()
-	ar.regen()
-	ar.tending()
-	ar.sip()
-	ar.road()
+	# ar.harvest()
+	# ar.est()
+	# ar.regen()
+	# ar.tending()
+	# ar.sip()
+	# ar.road()
 	ar.other() # AGG, WTX and SGR
 
 	# writing the log file

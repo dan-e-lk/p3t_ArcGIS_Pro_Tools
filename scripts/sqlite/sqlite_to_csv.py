@@ -89,81 +89,99 @@ if __name__ == '__main__':
 # WHERE a.SLASHPIL = 'Y'
 # GROUP BY a.SLASHPIL, a.AR_YEAR, b.FMU_CODE, b.FMU_NAME
 # """],
-    '3': [ARI_wVol, csv_folderpath, 'raw_Vol_bin_Area_GLSL.csv',
+#     '3': [ARI_wVol, csv_folderpath, 'raw_Vol_bin_Area_GLSL.csv',
+# """
+# SELECT
+#     CASE
+#         WHEN NMV < 20 OR NMV IS NULL THEN '0-20'
+#         WHEN NMV < 40  THEN '20-40'
+#         WHEN NMV < 60  THEN '40-60'
+#         WHEN NMV < 80  THEN '60-80'
+#         WHEN NMV < 100 THEN '80-100'
+#         WHEN NMV < 120 THEN '100-120'
+#         WHEN NMV < 140 THEN '120-140'
+#         WHEN NMV < 160 THEN '140-160'
+#         WHEN NMV < 180 THEN '160-180'
+#         WHEN NMV < 200 THEN '180-200'
+#         WHEN NMV < 220 THEN '200-220'
+#         WHEN NMV < 240 THEN '220-240'
+#         ELSE '240+'
+#     END AS NMV_Bin20, 
+#     AC20, a.MUNO, SUM(Ha) AS Area_ha, COUNT(Ha) AS PolygonCount, 'GLSL' AS REGION_NAME
+# FROM FOR_ALL_wVol a
+# LEFT JOIN MU_Boundary2 b
+# ON a.MUNO = b.FMU_NUM
+# WHERE a.OWNER = 'CROWN' AND b.SFU_REGION = 'GLSL'
+# GROUP BY NMV_Bin20, AC20, a.MUNO
+# ORDER BY MIN(NMV);
+# """],
+#     '4': [ARI_wVol, csv_folderpath, 'raw_Vol_bin_Area_BOR.csv',
+# """
+# SELECT
+#     CASE
+#         WHEN NMV < 20 OR NMV IS NULL THEN '0-20'
+#         WHEN NMV < 40  THEN '20-40'
+#         WHEN NMV < 60  THEN '40-60'
+#         WHEN NMV < 80  THEN '60-80'
+#         WHEN NMV < 100 THEN '80-100'
+#         WHEN NMV < 120 THEN '100-120'
+#         WHEN NMV < 140 THEN '120-140'
+#         WHEN NMV < 160 THEN '140-160'
+#         WHEN NMV < 180 THEN '160-180'
+#         WHEN NMV < 200 THEN '180-200'
+#         WHEN NMV < 220 THEN '200-220'
+#         WHEN NMV < 240 THEN '220-240'
+#         ELSE '240+'
+#     END AS NMV_Bin20, 
+#     AC20, a.MUNO, SUM(Ha) AS Area_ha, COUNT(Ha) AS PolygonCount, 'BOR' AS REGION_NAME
+# FROM FOR_ALL_wVol a
+# LEFT JOIN MU_Boundary2 b
+# ON a.MUNO = b.FMU_NUM
+# WHERE a.OWNER = 'CROWN' AND b.SFU_REGION in ('NEBOR','NWBOR')
+# GROUP BY NMV_Bin20, AC20, a.MUNO
+# ORDER BY MIN(NMV);
+# """],
+#     '5': [ARI_wVol_FN, csv_folderpath, 'raw_Vol_bin_Area_FN.csv',
+# """
+# SELECT
+#     CASE
+#         WHEN NMV < 20 OR NMV IS NULL THEN '0-20'
+#         WHEN NMV < 40  THEN '20-40'
+#         WHEN NMV < 60  THEN '40-60'
+#         WHEN NMV < 80  THEN '60-80'
+#         WHEN NMV < 100 THEN '80-100'
+#         WHEN NMV < 120 THEN '100-120'
+#         WHEN NMV < 140 THEN '120-140'
+#         WHEN NMV < 160 THEN '140-160'
+#         WHEN NMV < 180 THEN '160-180'
+#         WHEN NMV < 200 THEN '180-200'
+#         WHEN NMV < 220 THEN '200-220'
+#         WHEN NMV < 240 THEN '220-240'
+#         ELSE '240+'
+#     END AS NMV_Bin20, 
+#     AC20, MUNO, SUM(Ha) AS Area_ha, COUNT(Ha) AS PolygonCount, 'FN' AS REGION_NAME
+# FROM FN_wVol
+# WHERE OWNER = 'CROWN'
+# GROUP BY NMV_Bin20, AC20, MUNO
+# ORDER BY MIN(NMV);
+# """],
+    '6': [fe, csv_folderpath, 'TND_CHEM_2015-2024.csv',
 """
-SELECT
-    CASE
-        WHEN NMV < 20 OR NMV IS NULL THEN '0-20'
-        WHEN NMV < 40  THEN '20-40'
-        WHEN NMV < 60  THEN '40-60'
-        WHEN NMV < 80  THEN '60-80'
-        WHEN NMV < 100 THEN '80-100'
-        WHEN NMV < 120 THEN '100-120'
-        WHEN NMV < 140 THEN '120-140'
-        WHEN NMV < 160 THEN '140-160'
-        WHEN NMV < 180 THEN '160-180'
-        WHEN NMV < 200 THEN '180-200'
-        WHEN NMV < 220 THEN '200-220'
-        WHEN NMV < 240 THEN '220-240'
-        ELSE '240+'
-    END AS NMV_Bin20, 
-    AC20, a.MUNO, SUM(Ha) AS Area_ha, COUNT(Ha) AS PolygonCount, 'GLSL' AS REGION_NAME
-FROM FOR_ALL_wVol a
-LEFT JOIN MU_Boundary2 b
+SELECT a.*, b.FMU_NAME
+FROM SRC_AR_TEND_ALL_02_N_UP a
+LEFT JOIN ref_FMU_FN_PARK_Boundary b
 ON a.MUNO = b.FMU_NUM
-WHERE a.OWNER = 'CROWN' AND b.SFU_REGION = 'GLSL'
-GROUP BY NMV_Bin20, AC20, a.MUNO
-ORDER BY MIN(NMV);
+WHERE a.TRTMTHD1 in ('CLCHEMA','CLCHEMG') AND AR_YEAR > 2014
+ORDER BY AR_YEAR
 """],
-    '4': [ARI_wVol, csv_folderpath, 'raw_Vol_bin_Area_BOR.csv',
+    '7': [fe, csv_folderpath, 'SIP_CHEM_2015-2024.csv',
 """
-SELECT
-    CASE
-        WHEN NMV < 20 OR NMV IS NULL THEN '0-20'
-        WHEN NMV < 40  THEN '20-40'
-        WHEN NMV < 60  THEN '40-60'
-        WHEN NMV < 80  THEN '60-80'
-        WHEN NMV < 100 THEN '80-100'
-        WHEN NMV < 120 THEN '100-120'
-        WHEN NMV < 140 THEN '120-140'
-        WHEN NMV < 160 THEN '140-160'
-        WHEN NMV < 180 THEN '160-180'
-        WHEN NMV < 200 THEN '180-200'
-        WHEN NMV < 220 THEN '200-220'
-        WHEN NMV < 240 THEN '220-240'
-        ELSE '240+'
-    END AS NMV_Bin20, 
-    AC20, a.MUNO, SUM(Ha) AS Area_ha, COUNT(Ha) AS PolygonCount, 'BOR' AS REGION_NAME
-FROM FOR_ALL_wVol a
-LEFT JOIN MU_Boundary2 b
+SELECT a.*, b.FMU_NAME
+FROM SRC_AR_SIP_ALL_02_N_UP a
+LEFT JOIN ref_FMU_FN_PARK_Boundary b
 ON a.MUNO = b.FMU_NUM
-WHERE a.OWNER = 'CROWN' AND b.SFU_REGION in ('NEBOR','NWBOR')
-GROUP BY NMV_Bin20, AC20, a.MUNO
-ORDER BY MIN(NMV);
-"""],
-    '5': [ARI_wVol_FN, csv_folderpath, 'raw_Vol_bin_Area_FN.csv',
-"""
-SELECT
-    CASE
-        WHEN NMV < 20 OR NMV IS NULL THEN '0-20'
-        WHEN NMV < 40  THEN '20-40'
-        WHEN NMV < 60  THEN '40-60'
-        WHEN NMV < 80  THEN '60-80'
-        WHEN NMV < 100 THEN '80-100'
-        WHEN NMV < 120 THEN '100-120'
-        WHEN NMV < 140 THEN '120-140'
-        WHEN NMV < 160 THEN '140-160'
-        WHEN NMV < 180 THEN '160-180'
-        WHEN NMV < 200 THEN '180-200'
-        WHEN NMV < 220 THEN '200-220'
-        WHEN NMV < 240 THEN '220-240'
-        ELSE '240+'
-    END AS NMV_Bin20, 
-    AC20, MUNO, SUM(Ha) AS Area_ha, COUNT(Ha) AS PolygonCount, 'FN' AS REGION_NAME
-FROM FN_wVol
-WHERE OWNER = 'CROWN'
-GROUP BY NMV_Bin20, AC20, MUNO
-ORDER BY MIN(NMV);
+WHERE a.TRTMTHD1 in ('SIPCHEMA','SIPCHEMG','SIPCHEM') AND AR_YEAR > 2014
+ORDER BY AR_YEAR
 """],
     }
 
